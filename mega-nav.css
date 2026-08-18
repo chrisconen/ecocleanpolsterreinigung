@@ -1,0 +1,478 @@
+/* ═══════════════════════════════════════════════════════════
+   MEGA DROPDOWN NAVIGATION - ECO Clean Österreich
+   Desktop: Hover cascade | Mobile: Click accordion
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   DESKTOP MEGA DROPDOWN
+   ═══════════════════════════════════════════════════════════ */
+
+/* Main nav container */
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Top level dropdown (Polsterreinigung / Matratzenreinigung) */
+.nav-mega {
+    position: relative;
+}
+
+.nav-mega-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: transparent;
+    border: none;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.nav-mega-btn:hover {
+    color: var(--color-accent);
+}
+
+.nav-mega-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: transform 0.2s ease;
+}
+
+.nav-mega:hover .nav-mega-btn svg {
+    transform: rotate(180deg);
+}
+
+/* Level 1: Bundesländer dropdown */
+.nav-mega-dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    min-width: 200px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s ease;
+    z-index: 1000;
+}
+
+.nav-mega:hover .nav-mega-dropdown {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Bundesland item (with nested cities) */
+.nav-bundesland {
+    position: relative;
+}
+
+.nav-bundesland-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.nav-bundesland-link:hover {
+    background: var(--color-bg);
+    color: var(--color-accent);
+}
+
+.nav-bundesland-link svg {
+    width: 14px;
+    height: 14px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    opacity: 0.5;
+}
+
+/* Level 2: Cities dropdown (slides right) */
+.nav-cities {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    min-width: 180px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(10px);
+    transition: all 0.2s ease;
+}
+
+.nav-bundesland:hover .nav-cities {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+}
+
+.nav-city-link {
+    display: block;
+    padding: 10px 16px;
+    color: var(--color-text);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+}
+
+.nav-city-link:hover {
+    background: var(--color-bg);
+    color: var(--color-accent);
+}
+
+/* CTA Button in nav */
+.nav-cta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--color-accent);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    border-radius: 50px;
+    transition: all 0.3s ease;
+    margin-left: 8px;
+}
+
+.nav-cta:hover {
+    background: var(--color-accent-dark, #059669);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.nav-cta svg {
+    width: 18px;
+    height: 18px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MOBILE NAVIGATION
+   ═══════════════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+    .nav-links {
+        display: none;
+    }
+    
+    .nav-toggle {
+        display: flex;
+    }
+}
+
+/* Mobile Menu Overlay */
+.mobile-menu {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: white;
+    z-index: 9998;
+    padding: 80px 24px 24px;
+    overflow-y: auto;
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+}
+
+.mobile-menu.active {
+    transform: translateX(0);
+}
+
+/* Mobile Logo */
+.mobile-menu-logo {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-menu-logo span {
+    color: var(--color-accent);
+}
+
+/* Mobile Mega Dropdown */
+.mobile-mega {
+    margin-bottom: 8px;
+}
+
+.mobile-mega-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 0;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--color-text);
+    cursor: pointer;
+    text-align: left;
+}
+
+.mobile-mega-btn svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: transform 0.3s ease;
+}
+
+.mobile-mega.active .mobile-mega-btn svg {
+    transform: rotate(180deg);
+}
+
+/* Mobile Bundesländer List */
+.mobile-bundeslaender {
+    display: none;
+    padding-left: 16px;
+    background: var(--color-bg);
+    border-radius: 8px;
+    margin: 8px 0;
+}
+
+.mobile-mega.active .mobile-bundeslaender {
+    display: block;
+}
+
+/* Mobile Bundesland Item */
+.mobile-bundesland {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.mobile-bundesland:last-child {
+    border-bottom: none;
+}
+
+.mobile-bundesland-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 8px;
+    background: none;
+    border: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--color-text);
+    cursor: pointer;
+    text-align: left;
+}
+
+.mobile-bundesland-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: transform 0.3s ease;
+}
+
+.mobile-bundesland.active .mobile-bundesland-btn svg {
+    transform: rotate(180deg);
+}
+
+/* Mobile Cities List */
+.mobile-cities {
+    display: none;
+    padding: 0 0 8px 16px;
+}
+
+.mobile-bundesland.active .mobile-cities {
+    display: block;
+}
+
+.mobile-city-link {
+    display: block;
+    padding: 10px 8px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.95rem;
+    transition: color 0.2s ease;
+}
+
+.mobile-city-link:hover,
+.mobile-city-link.active {
+    color: var(--color-accent);
+}
+
+/* Mobile CTA */
+.mobile-menu-cta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    padding: 16px;
+    margin-top: 24px;
+    background: var(--color-accent);
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 12px;
+}
+
+.mobile-menu-cta svg {
+    width: 20px;
+    height: 20px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   NAV TOGGLE BUTTON
+   ═══════════════════════════════════════════════════════════ */
+
+.nav-toggle {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    width: 32px;
+    height: 32px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 9999;
+}
+
+.nav-toggle span {
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--color-text);
+    transition: all 0.3s ease;
+}
+
+.nav-toggle.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+}
+
+.nav-toggle.active span:nth-child(2) {
+    opacity: 0;
+}
+
+.nav-toggle.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(5px, -5px);
+}
+
+@media (max-width: 1024px) {
+    .nav-toggle {
+        display: flex;
+    }
+}
+
+/* Ratgeber Dropdown */
+.nav-dropdown {
+    position: relative;
+}
+
+.nav-dropdown-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: var(--color-text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    background: none;
+    border: none;
+    font-family: var(--font-body);
+}
+
+.nav-dropdown-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+    stroke-width: 2;
+    fill: none;
+    transition: transform 0.2s;
+}
+
+.nav-dropdown:hover .nav-dropdown-btn svg {
+    transform: rotate(180deg);
+}
+
+.nav-dropdown:hover .nav-dropdown-btn {
+    color: var(--color-accent);
+}
+
+.nav-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.2s;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    z-index: 110;
+}
+
+.nav-dropdown:hover .nav-dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.nav-dropdown-item {
+    display: block;
+    padding: 10px 14px;
+    color: var(--color-text-secondary);
+    text-decoration: none;
+    font-size: 0.85rem;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.nav-dropdown-item:hover {
+    background: var(--color-bg-alt);
+    color: var(--color-accent);
+}
+
+@media (max-width: 1024px) {
+    .nav-dropdown {
+        display: none;
+    }
+}
