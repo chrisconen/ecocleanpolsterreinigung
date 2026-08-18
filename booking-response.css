@@ -1,0 +1,286 @@
+/* ═══════════════════════════════════════════════════════════
+   N8N BOOKING RESPONSE STYLES
+   Add this to your style.css file
+   ═══════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════
+   SUCCESS MESSAGE
+   ═══════════════════════════════════════════════════════════ */
+.config-success {
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.config-success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-light, #34d399));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: scaleIn 0.5s ease 0.2s both;
+}
+
+.config-success-icon svg {
+    width: 40px;
+    height: 40px;
+    stroke: white;
+    stroke-width: 3;
+    fill: none;
+}
+
+.config-success-title {
+    font-family: var(--font-display, 'Syne', sans-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text, #1a1a2e);
+    margin-bottom: 12px;
+}
+
+.config-success-text {
+    font-size: 1rem;
+    color: var(--color-text-secondary, #64748b);
+    margin-bottom: 8px;
+}
+
+/* Booking Slot Info */
+.booking-slot-info {
+    background: var(--color-bg, #f8fafc);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-left: 4px solid var(--color-accent, #10b981);
+}
+
+.booking-slot-info p {
+    margin: 8px 0;
+    font-size: 1rem;
+    color: var(--color-text, #1a1a2e);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ERROR MESSAGE
+   ═══════════════════════════════════════════════════════════ */
+.config-error {
+    text-align: center;
+    padding: 40px 20px;
+    animation: fadeInUp 0.5s ease;
+}
+
+.config-error-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 20px;
+    background: linear-gradient(135deg, #ef4444, #f87171);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: shake 0.5s ease;
+}
+
+.config-error-icon svg {
+    width: 40px;
+    height: 40px;
+    stroke: white;
+    stroke-width: 2;
+    fill: none;
+}
+
+.config-error-title {
+    font-family: var(--font-display, 'Syne', sans-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-text, #1a1a2e);
+    margin-bottom: 12px;
+}
+
+.config-error-text {
+    font-size: 1rem;
+    color: var(--color-text-secondary, #64748b);
+    margin-bottom: 16px;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.config-suggestion {
+    font-size: 0.95rem;
+    color: var(--color-accent, #10b981);
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+/* Retry Button */
+.config-retry-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, var(--color-accent, #10b981), var(--color-accent-light, #34d399));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-display, 'Syne', sans-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 12px;
+}
+
+.config-retry-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+/* Phone Button */
+.config-phone-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: var(--color-text, #1a1a2e);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    font-family: var(--font-display, 'Syne', sans-serif);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    margin-top: 12px;
+}
+
+.config-phone-btn:hover {
+    background: var(--color-accent, #10b981);
+    transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   INPUT ERROR STATE
+   ═══════════════════════════════════════════════════════════ */
+.config-input.error,
+.config-textarea.error {
+    border-color: #ef4444 !important;
+    background: rgba(239, 68, 68, 0.05);
+    animation: shake 0.4s ease;
+}
+
+.config-input.error:focus,
+.config-textarea.error:focus {
+    box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════ */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-5px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(5px);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LOADING STATE ENHANCEMENT
+   ═══════════════════════════════════════════════════════════ */
+.cta-loading {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cta-loading::before {
+    content: '';
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE ADJUSTMENTS
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+    .config-success,
+    .config-error {
+        padding: 30px 16px;
+    }
+
+    .config-success-icon,
+    .config-error-icon {
+        width: 64px;
+        height: 64px;
+    }
+
+    .config-success-icon svg,
+    .config-error-icon svg {
+        width: 32px;
+        height: 32px;
+    }
+
+    .config-success-title,
+    .config-error-title {
+        font-size: 1.25rem;
+    }
+
+    .booking-slot-info {
+        padding: 12px 16px;
+    }
+}

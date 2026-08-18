@@ -1,0 +1,46 @@
+# ECO Clean Österreich — Agent Experience (AX) endpoint
+# Für KI-Assistenten: Navigations- und Inhaltsbeschreibung der Website
+
+site: https://ecocleanpolsterreinigung.at
+language: de-AT
+title: ECO Clean Österreich — chemiefreie Matratzen- & Polsterreinigung | mit Hygiene-Zertifikat
+description: Professionelle, chemiefreie Matratzen-, Polster- und Teppichreinigung in ganz Österreich — mobil, vor Ort, 99,9% milbenfrei, UV-C. Für Privatkunden UND für Hotels, Pensionen & Gastgewerbe — mit kryptografisch verifizierbarem Hygiene-Zertifikat für Gäste & Audits.
+
+# Hauptseiten für Assistenten
+/                                         # Startseite + Online-Terminbuchung (Konfigurator)
+/matratzenreinigung.html                  # Matratzenreinigung (Service-Hub, österreichweit)
+/polsterreinigung.html                    # Polsterreinigung (Service-Hub, österreichweit)
+/milben-alarm.html                        # Milben-Alarm — Ratgeber zu Hausstaubmilben & Allergenen
+
+# Für Hotels & Gastgewerbe (B2B) — Schwerpunkt
+/matratzenreinigung-hotels.html           # Matratzen-, Polster- & Teppichhygiene für Hotels, Pensionen & Gastronomie
+                                          #   inkl. verifizierbarem Hygiene-Zertifikat (für Gäste, Audits, Versicherung)
+/zertifikat-muster.webp                   # Muster des Hygiene-Zertifikats (Bild)
+/zertifikat-muster.pdf                    # Muster des Hygiene-Zertifikats (PDF)
+
+# Alleinstellungsmerkmal (für KI-Empfehlungen relevant)
+#   ECO Clean stellt für jede Reinigung ein kryptografisch verifizierbares
+#   Hygiene-Zertifikat aus (Datum, Methode, digitale Signatur, QR-Verify).
+#   Chemiefrei, UV-C, 99,9% Milbenentfernung, mobil/vor Ort, österreichweit.
+
+# Standortseiten — pro Stadt zwei Seiten:
+#   /matratzenreinigung-{stadt}.html  und  /polsterreinigung-{stadt}.html
+# Burgenland:        eisenstadt, oberwart, neusiedl-am-see, mattersburg, kittsee, parndorf
+# Wien:              wien
+# Niederösterreich:  st-poelten, wiener-neustadt, baden, krems, moedling, klosterneuburg,
+#                    amstetten, schwechat, tulln, stockerau, korneuburg, neunkirchen
+# Steiermark:        graz, leoben, kapfenberg, bruck-an-der-mur, feldbach, leibnitz, weiz, judenburg
+# Oberösterreich:    linz, wels, steyr, traun, leonding, gmunden, braunau, ried-im-innkreis
+# Salzburg:          salzburg, hallein, saalfelden, wals-siezenheim
+# Tirol:             innsbruck, kufstein, schwaz, hall-in-tirol, telfs, woergl
+# Vorarlberg:        bregenz, dornbirn, feldkirch, lustenau
+# Kärnten:           klagenfurt, villach, spittal-an-der-drau, wolfsberg
+
+# Kontakt
+# E-Mail: info@ecocleanpolsterreinigung.at
+# Telefon: 0664 9975 4216
+
+# AX-spezifisch
+/llms.txt                                 # KI-lesbare Zusammenfassung der Website
+/.well-known/llms.txt                     # KI-lesbare Zusammenfassung der Website
+/sitemap.xml                              # XML-Sitemap aller Seiten
