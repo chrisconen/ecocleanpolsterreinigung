@@ -1,0 +1,24 @@
+User-agent: *
+Allow: /
+
+# Adminisztrációs felületek tiltása (Biztonság + Crawl Budget)
+Disallow: /wp-admin/
+Disallow: /login/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /temp/
+Disallow: /private/
+
+# Fontos kivételek (Hogy a Google lássa a stílusokat és scripteket)
+Allow: /wp-admin/admin-ajax.php
+Allow: *.js
+Allow: *.css
+Allow: *.png
+Allow: *.jpg
+Allow: *.webp
+Allow: *.svg
+
+# Sitemap hivatkozások (Hogy a Google biztosan megtalálja)
+# Kérlek, ellenőrizd, hogy nálad melyik név az érvényes! Általában ezek:
+Sitemap: https://ecocleanpolsterreinigung.at/sitemap.xml
+Sitemap: https://ecocleanpolsterreinigung.at/sitemap_index.xml
