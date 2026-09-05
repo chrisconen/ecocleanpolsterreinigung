@@ -280,8 +280,6 @@ function buildChips(containerId, items, stepId, multi = false) {
     items.forEach(text => {
         const chip = document.createElement('button');
         chip.className = 'config-chip';
-        chip.type = 'button';
-        chip.setAttribute('aria-pressed', 'false');
         chip.textContent = text;
         chip.onclick = () => handleChipClick(chip, container, text, stepId, multi);
         container.appendChild(chip);
@@ -302,9 +300,6 @@ function handleChipClick(chip, container, value, stepId, multi) {
         if (stepId === 1) state.customerType = value;
         if (stepId === 2) { state.serviceType = value; updateVisibleProducts(); }
     }
-    container.querySelectorAll('.config-chip').forEach(button => {
-        button.setAttribute('aria-pressed', String(button.classList.contains('selected')));
-    });
     updateSummary();
     updateHeroBadges();
 }
@@ -328,9 +323,9 @@ function buildNumbers(containerId, items) {
         div.innerHTML = `
                     <span class="config-num-label">${item.name}</span>
                     <div class="config-num-controls">
-                        <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl verringern" onclick="changeQty('${item.name}', -1)">−</button>
+                        <button class="config-num-btn" onclick="changeQty('${item.name}', -1)">−</button>
                         <span class="config-num-value" id="qty-${item.name.replace(/\s/g, '-')}">0</span>
-                        <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl erhöhen" onclick="changeQty('${item.name}', 1)">+</button>
+                        <button class="config-num-btn" onclick="changeQty('${item.name}', 1)">+</button>
                     </div>
                 `;
         container.appendChild(div);
@@ -351,11 +346,6 @@ function updateVisibleProducts() {
     // Show Step 3
     if (step3) {
         step3.style.display = 'block';
-        const productLabel = document.getElementById('label3');
-        if (productLabel) {
-            productLabel.textContent = STEPS.find(step => step.id === 3).label;
-            productLabel.classList.add('visible');
-        }
         // Ensure visibility class is there if called after animation
         if (!step3.classList.contains('visible') && started) {
             step3.classList.add('visible');
@@ -499,10 +489,6 @@ function updateSummary() {
             // Optional: falls ein Betrags-Element existiert, den korrekten Mindestwert anzeigen
             const mindestAmountEl = document.getElementById('mindestAmount');
             if (mindestAmountEl) mindestAmountEl.textContent = zoneMinOrder;
-            else {
-                const minimumLabel = mindestEl.querySelector('strong');
-                if (minimumLabel) minimumLabel.textContent = `${zoneMinOrder} €`;
-            }
         }
     } else if (mindestEl) {
         mindestEl.style.display = 'none';
@@ -1181,19 +1167,6 @@ if (document.readyState === 'loading') {
 // ═══════════════════════════════════════════════════════════
 
 function startAnimation() {
-    // The homepage keeps the offer in its own section. Every CTA returns to it,
-    // including repeat clicks after the configurator has already been opened.
-    if (document.body.classList.contains('home-modern')) {
-        const destination = document.getElementById('configurator');
-        destination.classList.add('active');
-        requestAnimationFrame(() => {
-            destination.focus({ preventScroll: true });
-            destination.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                block: 'start'
-            });
-        });
-    }
     if (started) {
         // Already started, do nothing
         return;
