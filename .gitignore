@@ -1,0 +1,19 @@
+# Large design source files (not needed for the site)
+*.psd
+scratch/
+stats/
+.claude/
+
+# Dev / helper scripts & docs
+fix_email.py
+regenerate_pages.py
+FOGLALÁSI RENDSZER N8N BRAIN NODE.txt
+ECO Clean - Booking - AT.json
+ECO Clean - Check Availability.json
+BADGE_REPOSITIONING_WALKTHROUGH.md
+FRONTEND_REVIEW.md
+INTEGRATION-GUIDE.html
+
+# Old/legacy assets
+*alt.png
+main-js-patch-v3.1.js

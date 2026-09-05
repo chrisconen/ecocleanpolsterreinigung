@@ -1,0 +1,39 @@
+/* Visual continuity for the three core service pages, preserving their content. */
+.service-modern .container {max-width:1392px;padding-left:56px;padding-right:56px;}
+.service-modern .page-hero {padding:48px 0 68px;background:var(--ec-paper);}
+.service-modern .page-hero .container {display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+.service-modern .page-hero-title {font-size:clamp(42px,4.4vw,65px);line-height:1.12;letter-spacing:-3px;font-weight:500;margin:20px 0 26px;overflow-wrap:normal;}
+.service-modern .page-hero-title span {color:#688166;}
+.service-modern .page-hero-desc {font-size:17px;line-height:1.85;margin-bottom:28px;}
+.service-back {display:inline-block;margin-bottom:28px;color:var(--ec-muted);font-size:12px;text-decoration:none;}
+.service-modern .service-hero-photo {position:relative;margin:0;height:530px;}
+.service-hero-photo img {width:100%;height:100%;object-fit:cover;border-radius:12px;}
+.service-hero-photo figcaption {position:absolute;right:14px;bottom:12px;color:white;text-shadow:0 1px 6px #000;font-size:10px;}
+.service-contact {margin-top:20px;font-size:12px;color:var(--ec-muted);}
+.service-contact a {color:var(--ec-ink);text-decoration:none;font-weight:600;}
+.service-modern .pricing-section,.service-modern .features-section,.service-modern .steps-section {background:var(--ec-paper);}
+.service-modern .pricing-card,.service-modern .feature-card,.service-modern .step-card {border:1px solid #d7e1cf;border-radius:10px;box-shadow:none;}
+.service-modern .pricing-card {background:#edf1e5;}
+.service-modern .pricing-title,.service-modern .feature-title {font-weight:600;}
+.service-modern .pricing-price {color:var(--ec-ink);font-weight:500;}
+.service-modern .features-title {font-weight:500;letter-spacing:-1.5px;font-size:40px;}
+.service-modern .feature-desc,.service-modern .step-desc {font-size:16px;line-height:1.85;}
+.service-modern .feature-icon {background:#eef2e4;color:var(--ec-ink);}
+.service-modern .feature-card:has(>h3) {display:block;min-width:0;}
+.service-modern .feature-card>h3 {margin-bottom:12px;overflow-wrap:anywhere;}
+.service-modern .feature-card>p {font-size:16px;line-height:1.8;overflow-wrap:anywhere;}
+.service-modern .cert-figure {max-width:100%;min-width:0;flex:0 1 420px;}
+.service-modern .cert-thumb {max-width:100%;}
+.service-modern .cert-thumb img {max-width:100%;}
+.service-modern .ba-section,.service-modern .cta-section {background:var(--ec-ink);}
+.service-modern .ba-title,.service-modern .cta-title {color:#f8faee;font-weight:500;}
+.service-modern .ba-title span,.service-modern .cta-title span {color:#dceeac;}
+.service-modern .ba-text,.service-modern .ba-quote,.service-modern .cta-desc {color:#d6dfd1;}
+.service-modern .page-hero-cta,.service-modern .cta-btn,.service-modern .ba-btn {border-radius:7px;}
+.service-modern .footer {background:#eef1e7;}
+.service-modern .footer-logo,.service-modern .footer-column-title {color:var(--ec-ink);}
+.service-modern .footer-desc,.service-modern .footer-links a,.service-modern .footer-contact-item,.service-modern .footer-copyright,.service-modern .footer-legal a {color:var(--ec-muted);}
+.service-modern .footer-bottom {border-top-color:#d1ddc8;}
+@media(max-width:1100px) {.service-modern .container {padding-left:32px;padding-right:32px;}.service-modern .page-hero .container {gap:35px;}.service-modern .page-hero-title {font-size:48px;letter-spacing:-2px;}}
+@media(max-width:800px) {.service-modern .page-hero .container {grid-template-columns:1fr;gap:28px;}.service-modern .page-hero-content {max-width:650px;}.service-modern .service-hero-photo {height:420px;}.service-modern .page-hero-title {font-size:52px;}.service-modern .features-title {font-size:33px;}}
+@media(max-width:640px) {.service-modern .container {padding-left:22px;padding-right:22px;}.service-modern .page-hero {padding:24px 0 45px;}.service-modern .page-hero-title {font-size:41px;letter-spacing:-2px;}.service-modern .page-hero-desc {font-size:16px;}.service-modern .service-hero-photo {height:345px;}.service-back {margin-bottom:22px;}.service-modern .ec-button {font-size:13px;padding:16px 18px;gap:13px;}.service-modern .features-title {font-size:30px;}.service-modern .pricing-price {font-size:34px;}}
