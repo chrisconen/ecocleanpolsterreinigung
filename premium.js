@@ -88,8 +88,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   const normalize = value => value.toLocaleLowerCase('de-AT').replaceAll('ß','ss').replaceAll('ö','oe').replaceAll('ä','ae').replaceAll('ü','ue').normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
   const loose = value => normalize(value).replaceAll('oe','o').replaceAll('ae','a').replaceAll('ue','u').replaceAll('.','');
   document.querySelectorAll('[data-explorer]').forEach(explorer => {
-    let selectedRegion = regions[0];
-    let selectedService = 'polsterreinigung';
+    let selectedRegion = regions.find(region => region.code === explorer.dataset.defaultRegion) || regions[0];
+    let selectedService = explorer.dataset.defaultService === 'matratzenreinigung' ? 'matratzenreinigung' : 'polsterreinigung';
     const search = explorer.querySelector('[data-city-search]');
     const regionSelect = explorer.querySelector('[data-region-select]');
     const clear = explorer.querySelector('[data-clear-search]');
@@ -154,6 +154,8 @@ document.addEventListener('DOMContentLoaded', async () => {
       explorer.querySelectorAll('[data-service]').forEach(other => other.setAttribute('aria-pressed', String(other === button)));
       render();
     }));
+    regionSelect.value = selectedRegion.code;
+    explorer.querySelectorAll('[data-service]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.service === selectedService)));
     render();
   });
 });

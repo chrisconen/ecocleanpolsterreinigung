@@ -1,0 +1,142 @@
+/* City-page extension — loaded after premium.css/premium-services.css, everything scoped under .px-city-page */
+
+/* --- Hero additions (new figure, action row, related band) --- */
+.px-city-page .px-service-hero-content{min-width:0;}
+.px-city-page .px-hero-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:6px;}
+.px-city-page .px-hero-actions .px-link svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.5;}
+.px-city-page .px-button-text{background:transparent;color:var(--px-deep)!important;border-color:transparent;padding:15px 4px;gap:10px;}
+.px-city-page .px-button-text:hover{background:transparent;border-color:transparent;color:var(--px-green)!important;transform:none;text-decoration:underline;}
+.px-city-page .px-city-hero-figure{margin:0;position:relative;height:490px;}
+.px-city-page .px-city-hero-figure>img{width:100%;height:100%;object-fit:cover;border-radius:9px;}
+.px-city-page .px-city-hero-figure figcaption{position:absolute;bottom:12px;right:15px;color:#fff;text-shadow:0 1px 5px #000;font-size:10px;}
+.px-city-page .px-city-related{margin-top:36px;padding-top:22px;border-top:1px solid var(--px-line);}
+.px-city-page .px-city-related p{font-size:14px;line-height:1.8;color:var(--px-muted);max-width:820px;}
+.px-city-page .px-city-related a{color:var(--px-green);text-underline-offset:3px;}
+
+/* --- Hero trust grid: calmer shadows/padding, same badges --- */
+.px-city-page .hero-trust-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-template-rows:auto;height:auto;min-height:0;margin-top:54px;gap:16px;}
+.px-city-page .trust-card{border-radius:9px;padding:20px 18px;box-shadow:none;}
+.px-city-page .trust-card:hover{transform:none;box-shadow:0 8px 24px rgba(0,153,118,.12);}
+.px-city-page .trust-card::after{display:none;}
+.px-city-page .trust-card-icon{width:52px;height:52px;margin-bottom:10px;}
+.px-city-page .trust-card-value{font-size:1.5rem;}
+.px-city-page .trust-card-title{font-size:.88rem;}
+
+/* --- Real photo gallery: keep captions/photos, reduce shadow/overflow --- */
+.px-city-page .gallery-section{padding-block:60px;}
+.px-city-page .gallery-grid{gap:18px;}
+.px-city-page .gallery-item{border-radius:9px;box-shadow:none;border:1px solid var(--px-line);}
+
+/* --- Matratzen info box --- */
+.px-city-page .info-section{padding-block:40px;}
+.px-city-page .info-box{border-radius:9px;padding:26px;background:#eef6ee;border-color:var(--px-line);}
+.px-city-page .info-box-title{color:var(--px-green);}
+.px-city-page .info-box-content{color:var(--px-muted);}
+
+/* --- Minimum order banner: trim oversized shadow/padding --- */
+.px-city-page .min-order-section{padding:20px 0 4px;}
+.px-city-page .min-order-card{border-radius:9px;padding:26px 24px;box-shadow:none;border-width:1px;}
+.px-city-page .min-order-badge{width:96px;height:96px;box-shadow:none;}
+.px-city-page .mo-price{font-size:1.6rem;}
+
+/* --- Service area: dark overview card + new destination panel side by side --- */
+.px-city-page .area-section{padding-block:60px;}
+.px-city-page .px-area-grid{display:grid;grid-template-columns:1.1fr 1fr;gap:64px;align-items:center;}
+.px-city-page .area-card{padding:34px;border-radius:9px;}
+.px-city-page .area-card::before{opacity:.6;}
+
+.px-city-page .px-area-panel{background:#fff;border:1px solid var(--px-line);border-radius:9px;padding:32px;display:flex;flex-direction:column;gap:12px;min-width:0;}
+.px-city-page .px-area-panel .px-overline{margin-bottom:0;color:var(--px-green);}
+.px-city-page .px-area-panel h3{font-size:22px;letter-spacing:-.5px;overflow-wrap:anywhere;}
+.px-city-page .px-area-panel p{color:var(--px-muted);font-size:15px;line-height:1.75;}
+.px-city-page .px-area-panel .px-button{align-self:flex-start;margin-top:4px;}
+.px-city-page .px-area-panel details.px-nearby{margin-top:10px;padding-top:14px;border-top:1px solid var(--px-line);}
+.px-city-page .px-area-panel details.px-nearby summary{cursor:pointer;font-weight:600;font-size:14px;color:var(--px-deep);list-style:none;}
+.px-city-page .px-area-panel details.px-nearby summary::-webkit-details-marker{display:none;}
+.px-city-page .px-area-panel details.px-nearby summary::before{content:'+ ';color:var(--px-green);}
+.px-city-page .px-area-panel details[open].px-nearby summary::before{content:'– ';}
+.px-city-page .px-area-panel .area-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding:0;list-style:none;}
+.px-city-page .px-area-panel .area-tag{display:inline-block;background:#eef5ee;color:var(--px-ink);border-radius:999px;padding:6px 12px;font-size:13px;overflow-wrap:anywhere;}
+
+/* --- FAQ readability (unchanged structure, calmer surface) --- */
+.px-city-page .faq-section{padding-block:60px;}
+.px-city-page .faq-item{border-radius:9px;box-shadow:none;}
+.px-city-page .faq-item:hover{transform:none;box-shadow:none;border-color:var(--px-green);}
+
+/* --- Generic overflow guard, low-specificity so gallery/before-after sizing still wins --- */
+.px-city-page img{max-width:100%;}
+
+/* --- Reduced motion --- */
+.px-city-page{--color-text-muted:var(--px-muted);--color-text-secondary:var(--px-muted);}
+.px-city-page .trust-card,.px-city-page .trust-card.featured{background:white;border:1px solid var(--px-line);min-width:0;}
+.px-city-page .trust-card::before{background:var(--px-green);height:2px;}
+.px-city-page .trust-card-value{color:var(--px-green);}
+.px-city-page .trust-card-tag{color:var(--px-muted);background:var(--px-paper);}
+.px-city-page .trust-card-desc{font-size:12px;}
+.px-city-page .gallery-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));}
+.px-city-page .gallery-item{min-width:0;aspect-ratio:4/3;}
+.px-city-page .gallery-item img{width:100%;height:100%;object-fit:cover;}
+.px-city-page .gallery-caption{font-size:13px;padding:13px 16px;}
+.px-city-page .features-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.px-city-page .min-order-card{display:flex;align-items:center;gap:26px;background:#e9f4e9;border:1px solid var(--px-line);}
+.px-city-page .min-order-badge{display:flex;flex-direction:column;justify-content:center;align-items:center;flex:0 0 120px;min-height:120px;width:120px;background:var(--px-deep);color:white;border-radius:7px;}
+.px-city-page .mo-from{font-size:11px;}
+.px-city-page .mo-price{font-family:var(--font-display);font-size:32px;line-height:1.2;font-weight:600;}
+.px-city-page .mo-label{font-size:11px;}
+.px-city-page .min-order-body{flex:1;min-width:0;}
+.px-city-page .min-order-body h2{font-size:25px;letter-spacing:-.7px;line-height:1.25;margin-bottom:12px;}
+.px-city-page .min-order-body p{color:var(--px-muted);font-size:14px;line-height:1.8;}
+.px-city-page .min-order-services{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--px-green);margin-top:12px;}
+.px-city-page .min-order-cta{display:inline-flex;align-items:center;gap:10px;flex:0 0 175px;min-height:48px;font-size:13px;font-weight:600;text-decoration:none;color:var(--px-deep);}
+.px-city-page .min-order-cta svg{width:24px;height:24px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.5;}
+.px-city-page .area-title{font-size:clamp(30px,3vw,44px);letter-spacing:-1.5px;line-height:1.2;margin-bottom:20px;}
+.px-city-page .area-desc{color:var(--px-muted);line-height:1.8;}
+.px-city-page .px-region-silhouette{display:block;width:100%;height:auto;max-height:280px;margin-top:20px;}
+.px-city-page .px-region-silhouette path{fill:#dce9df;stroke:var(--px-paper);stroke-width:2;}
+.px-city-page .px-region-silhouette .px-region-highlight{fill:var(--px-green);}
+.px-city-page .px-city-comparison{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;z-index:5;cursor:ew-resize;touch-action:pan-y;}
+.px-city-page .ba-slider-wrap:focus-within{outline:3px solid var(--px-green);outline-offset:5px;}
+.px-city-page .px-service-hero h1{font-size:clamp(34px,4.1vw,61px);overflow-wrap:break-word;hyphens:none;}
+.px-city-page .faq-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+.px-city-page .faq-question{font-family:var(--font-display);line-height:1.4;}
+.px-city-page .px-area-panel .px-button{max-width:100%;white-space:normal;}
+.px-city-page .px-city-related p{margin-bottom:0;}
+@media (prefers-reduced-motion: reduce){
+  .px-city-page *{transition:none!important;animation:none!important;}
+}
+
+@media(max-width:1240px){
+  .px-city-page .px-city-hero-figure{height:460px;}
+}
+
+@media(max-width:960px){
+  .px-city-page .hero-trust-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .px-city-page .min-order-card{flex-wrap:wrap;}
+  .px-city-page .min-order-cta{flex:1 1 100%;}
+  .px-city-page .px-city-hero-figure{height:420px;}
+  .px-city-page .px-area-grid{grid-template-columns:1fr;gap:28px;}
+}
+
+@media(max-width:740px){
+  .px-city-page .gallery-grid,.px-city-page .features-grid,.px-city-page .faq-grid{grid-template-columns:1fr;}
+  .px-city-page .min-order-card{align-items:flex-start;}
+  .px-city-page .min-order-body{flex:1 1 220px;}
+  .px-city-page .px-city-hero-figure{height:360px;}
+  .px-city-page .hero-trust-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+@media(max-width:520px){
+  .px-city-page .hero-trust-grid{grid-template-columns:1fr;}
+  .px-city-page .px-area-panel{padding:22px;}
+}
+
+/* --- Long Austrian town names must not overflow at very small widths --- */
+@media(max-width:340px){
+  .px-city-page .area-tag,
+  .px-city-page .px-area-panel .area-tag,
+  .px-city-page .trust-card-title,
+  .px-city-page h1,
+  .px-city-page h2,
+  .px-city-page h3{overflow-wrap:anywhere;word-break:break-word;hyphens:none;}
+  .px-city-page .px-city-hero-figure{height:280px;}
+}

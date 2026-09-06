@@ -4,6 +4,16 @@
 /* Exactly three cards always form three equal desktop columns. */
 .px-service-page :is(.features-grid,.pricing-grid,.steps-grid,.benefits-grid):has(>:nth-child(3):last-child){display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:26px;}
 .px-service-page .ba-section,.px-service-page .cta-section{background:var(--px-deep);}.px-service-page .ba-title,.px-service-page .cta-title{color:white;font-weight:600;}.px-service-page .ba-title>span,.px-service-page .cta-title>span{color:#aff1c3;}.px-service-page .ba-text,.px-service-page .cta-desc,.px-service-page .ba-quote{color:#c4dece;}.px-service-page .cta-btn,.px-service-page .ba-btn{border-radius:6px;}.px-service-page .cert-figure{max-width:100%;min-width:0;flex:0 1 420px;}.px-service-page .cert-thumb,.px-service-page .cert-thumb>img{max-width:100%;}.px-service-page .gallery-item{border-radius:7px;}
+/* Keep light quote panels readable and CTA content independent of legacy reveal scripts. */
+.px-service-page .ba-quote{background:#fff;color:var(--px-ink);}
+.px-service-page .ba-quote-author{color:var(--px-muted);}
+.px-service-page .ba-label{color:#aff1c3;}
+.px-service-page .cta-section{color:#fff;}
+.px-service-page :is(.cta-title,.cta-desc,.cta-buttons){opacity:1;transform:none;}
+.px-service-page .cta-title{margin-bottom:16px;}
+.px-service-page .cta-btn-primary,.px-service-page .ba-btn{background:#d8f8df;color:var(--px-deep);border:1px solid #d8f8df;}
+.px-service-page .cta-btn-primary:hover,.px-service-page .ba-btn:hover{background:#f1fff3;border-color:#f1fff3;}
+.px-service-page .cta-btn-secondary{color:#fff;border-color:#6ca68b;}
 @media(max-width:1240px){.px-service-page .container{padding-inline:36px;}.px-service-hero-grid{gap:45px;}.px-service-hero h1{font-size:49px;}.px-service-hero figure{height:460px;}.px-service-page .feature-card,.px-service-page .pricing-card,.px-service-page .step-card{padding:24px;}.px-service-page .feature-card>h3{font-size:21px;}}
 @media(max-width:960px){.px-service-page .container{padding-inline:28px;}.px-service-hero-grid{gap:30px;}.px-service-hero h1{font-size:43px;letter-spacing:-1.8px;}.px-service-hero p{font-size:16px;}.px-service-hero figure{height:450px;}.px-service-page .features-title,.px-service-page .pricing-section-title,.px-service-page .steps-title{font-size:35px;}.px-service-page :is(.features-grid,.pricing-grid,.steps-grid,.benefits-grid):has(>:nth-child(3):last-child){gap:17px;}.px-service-page .pricing-price{font-size:27px;}}
 @media(max-width:740px){.px-service-hero-grid{grid-template-columns:1fr;gap:32px;}.px-service-hero h1{font-size:48px;}.px-service-hero p{max-width:600px;}.px-service-hero figure{height:400px;}.px-service-page :is(.features-grid,.pricing-grid,.steps-grid,.benefits-grid):has(>:nth-child(3):last-child){grid-template-columns:1fr;gap:20px;}.px-service-page .px-service-hero{padding-top:23px;padding-bottom:50px;}.px-service-page .features-title,.px-service-page .pricing-section-title,.px-service-page .steps-title{font-size:33px;}.px-service-page .feature-card>h3{font-size:24px;}}
