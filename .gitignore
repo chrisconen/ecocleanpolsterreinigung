@@ -17,3 +17,6 @@ INTEGRATION-GUIDE.html
 # Old/legacy assets
 *alt.png
 main-js-patch-v3.1.js
+
+# Local design review only
+preview/
