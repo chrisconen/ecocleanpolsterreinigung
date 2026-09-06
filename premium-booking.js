@@ -750,7 +750,7 @@ function submitForm() {
             hasError = true;
         } else if (email !== confirmEmail) {
             emailConfirm.classList.add('error');
-            alert('Die E-Mail Adressen stimmen nicht überein!');
+            alert('Die E-Mail-Adressen stimmen nicht überein!');
             return;
         }
     }
