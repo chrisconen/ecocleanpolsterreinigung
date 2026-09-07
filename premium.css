@@ -63,3 +63,24 @@
 .px-button:not(.px-button-light){background:#008567;border-color:#008567;}
 @media(max-width:960px){.px-site{padding-top:78px;}}
 @media(max-width:520px){.px-site{padding-top:74px;}}
+/* Optional treatments belong to the individual couch they will be used on. */
+.px-site .config-num-item{flex-direction:column;align-items:stretch;justify-content:flex-start;min-width:0;}
+.config-product-row{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;}
+.px-site .config-couch-item:has(.config-couch-addons:not([hidden])){border-color:#85ad8d;background:#f8fcf8;}
+.config-couch-addons[hidden],.config-addon-total[hidden]{display:none;}
+.config-couch-addons{border-top:1px solid #d5e3d6;padding-top:12px;min-width:0;}
+.config-addon-unit{padding:0;margin:0 0 14px;border:0;min-width:0;}
+.config-addon-unit legend{font-size:14px;font-weight:650;color:#234e30;padding:0 0 8px;}
+.config-addon-option{display:grid;grid-template-columns:16px minmax(0,1fr) auto;gap:8px;align-items:start;min-height:44px;padding:10px 0;cursor:pointer;border-bottom:1px solid #e3ebe4;}
+.config-addon-option input{width:16px;height:16px;margin:3px 0 0;accent-color:#286c3d;cursor:pointer;}
+.config-addon-option input:focus-visible{outline:2px solid #286c3d;outline-offset:3px;}
+.config-addon-option:has(input:checked){background:#eaf5ec;}
+.config-addon-option:has(input:disabled){opacity:.6;cursor:default;}
+.config-addon-copy{font-size:14px;line-height:1.45;color:#243d2b;overflow-wrap:anywhere;}
+.config-addon-copy small{display:block;font-size:12px;line-height:1.5;color:#506754;margin-top:3px;}
+.config-addon-price{font-size:14px;line-height:1.5;color:#234e30;white-space:nowrap;}
+.config-addon-note{font-size:12px;line-height:1.5;color:#506754;margin:0 0 3px;}
+.config-addon-total{font-size:14px;gap:12px;margin:10px 0;}
+.config-addon-total>strong{flex-shrink:0;white-space:nowrap;}
+.px-site .config-numbers{align-items:start;}
+@media(max-width:700px){.px-site .config-couch-item{grid-column:1 / -1;}.px-site .config-couch-item .config-num-label{font-size:14px !important;}}

@@ -97,6 +97,17 @@ const STEPS = [
     { id: 5, label: "Wo befinden Sie sich?", select: true }
 ];
 
+// Per-couch extras. Prices in EUR and additional working time in minutes.
+// Keep this catalog as the single source for UI, totals and booking line items.
+const COUCH_ADDONS = [
+    { id: 'sleep', name: 'Schlaffunktion / ausziehbare Liegefläche', description: 'Zusätzliche Liegefläche mitreinigen.', prices: { 'L-Couch': 30, 'U-Couch': 40 }, duration: 20 },
+    { id: 'odor', name: 'Hunde- & Katzengerüche behandeln', description: 'Gezielte Geruchsbehandlung. Bei Urin bitte Intensivreinigung wählen.', prices: { 'L-Couch': 25, 'U-Couch': 35 }, duration: 15 },
+    { id: 'protection', name: 'Imprägnierung / Fleckschutz', description: 'Zusätzlicher Schutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45 }, duration: 15 },
+    { id: 'intensive', name: 'Intensivreinigung bei starker Verschmutzung / Urin', description: 'Zusätzliche Behandlung belasteter Stellen, inklusive Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59 }, duration: 30 },
+    { id: 'hair', name: 'Intensive Tierhaarentfernung', description: 'Zusätzlicher Aufwand für festsitzende Hunde- und Katzenhaare.', prices: { 'L-Couch': 20, 'U-Couch': 30 }, duration: 15 }
+];
+const hasCouchAddons = name => COUCH_ADDONS[0].prices[name] !== undefined;
+
 const DYNAMIC_CONTENT = {
     customerType: {
         "Privatkunde": { discount: 0, title: "Privatkunden-Service", desc: "Persönliche Betreuung für Ihr Zuhause", icon: "🏠" },
@@ -108,7 +119,7 @@ const DYNAMIC_CONTENT = {
         "Beides": { title: "Komplett-Reinigung", desc: "Das beste Ergebnis für Ihr Zuhause", icon: "✨", badge: "EMPFOHLEN", features: ["Alles inklusive"] }
     },
     conditions: {
-        "Haustiere": { title: "Tierhaare & Gerüche", desc: "Spezialbehandlung für Tierhaare", icon: "🐾", badge: "+10%", surcharge: 10 },
+        "Haustiere": { title: "Haustiere im Haushalt", desc: "L-/U-Couch: Extras einzeln wählen. Andere Möbel: 10% Aufpreis.", icon: "🐾", surcharge: 0 },
         "Kleinkinder": { title: "Kindersicher", desc: "100% biologische Reinigung", icon: "👶", badge: "BIO", surcharge: 0 },
         "Allergiker": { title: "Anti-Allergen", desc: "99,9% Allergenentfernung", icon: "🌿", badge: "+10%", surcharge: 10 }
     },
@@ -131,13 +142,13 @@ const DYNAMIC_CONTENT = {
         // ── NIEDERÖSTERREICH ────────────────────────────────────
         "wiener-neustadt": { name: "Wiener Neustadt", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 60 },
         "st-poelten": { name: "St. Pölten", info: "Landeshauptstadt NÖ", zone: "NÖ", country: "AT", travelTime: 90 },
-        "baden": { name: "Baden", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 70 },
-        "krems": { name: "Krems", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 110 },
+        "baden": { name: "Baden", aliases: ["Baden bei Wien"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 70 },
+        "krems": { name: "Krems", aliases: ["Krems an der Donau"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 110 },
         "moedling": { name: "Mödling", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 75 },
         "klosterneuburg": { name: "Klosterneuburg", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 80 },
         "amstetten": { name: "Amstetten", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 150 },
         "schwechat": { name: "Schwechat", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 70 },
-        "tulln": { name: "Tulln", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 95 },
+        "tulln": { name: "Tulln", aliases: ["Tulln an der Donau"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 95 },
         "stockerau": { name: "Stockerau", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 90 },
         "korneuburg": { name: "Korneuburg", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 85 },
         "neunkirchen": { name: "Neunkirchen", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 65 },
@@ -157,15 +168,15 @@ const DYNAMIC_CONTENT = {
         "leonding": { name: "Leonding", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 200 },
         "traun": { name: "Traun", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 205 },
         "gmunden": { name: "Gmunden", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 195 },
-        "braunau": { name: "Braunau", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 240 },
+        "braunau": { name: "Braunau", aliases: ["Braunau am Inn"], info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 240 },
         "ried-im-innkreis": { name: "Ried im Innkreis", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 230 },
         // ── SALZBURG ────────────────────────────────────────────
         "salzburg": { name: "Salzburg", info: "Landeshauptstadt Salzburg", zone: "SB", country: "AT", travelTime: 260 },
         "hallein": { name: "Hallein", info: "Salzburg", zone: "SB", country: "AT", travelTime: 265 },
         "wals-siezenheim": { name: "Wals-Siezenheim", info: "Salzburg", zone: "SB", country: "AT", travelTime: 255 },
-        "saalfelden": { name: "Saalfelden", info: "Salzburg", zone: "SB", country: "AT", travelTime: 290 },
+        "saalfelden": { name: "Saalfelden", aliases: ["Saalfelden am Steinernen Meer"], info: "Salzburg", zone: "SB", country: "AT", travelTime: 290 },
         // ── KÄRNTEN ─────────────────────────────────────────────
-        "klagenfurt": { name: "Klagenfurt", info: "Landeshauptstadt Kärnten", zone: "K", country: "AT", travelTime: 185 },
+        "klagenfurt": { name: "Klagenfurt", aliases: ["Klagenfurt am Wörthersee"], info: "Landeshauptstadt Kärnten", zone: "K", country: "AT", travelTime: 185 },
         "villach": { name: "Villach", info: "Kärnten", zone: "K", country: "AT", travelTime: 200 },
         "wolfsberg": { name: "Wolfsberg", info: "Kärnten", zone: "K", country: "AT", travelTime: 175 },
         "spittal-an-der-drau": { name: "Spittal an der Drau", info: "Kärnten", zone: "K", country: "AT", travelTime: 215 },
@@ -190,6 +201,7 @@ const state = {
     customerType: null,
     serviceType: null,
     quantities: {},
+    couchAddons: {},
     conditions: [],
     location: null,
     selectedDate: null,
@@ -325,16 +337,158 @@ function buildNumbers(containerId, items) {
 
         div.className = `config-num-item config-item-${slug}`;
         div.dataset.category = item.category;
+        div.dataset.product = item.name;
         div.innerHTML = `
+                <div class="config-product-row">
                     <span class="config-num-label">${item.name}</span>
                     <div class="config-num-controls">
                         <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl verringern" onclick="changeQty('${item.name}', -1)">−</button>
                         <span class="config-num-value" id="qty-${item.name.replace(/\s/g, '-')}">0</span>
                         <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl erhöhen" onclick="changeQty('${item.name}', 1)">+</button>
                     </div>
+                </div>
                 `;
+        if (hasCouchAddons(item.name)) {
+            div.classList.add('config-couch-item');
+            const addons = document.createElement('div');
+            addons.className = 'config-couch-addons';
+            addons.hidden = true;
+            div.appendChild(addons);
+        }
         container.appendChild(div);
     });
+}
+
+function renderCouchAddons(name) {
+    if (!hasCouchAddons(name)) return;
+    const quantity = state.quantities[name] || 0;
+    const units = state.couchAddons[name] || [];
+    units.length = quantity;
+    for (let index = 0; index < quantity; index++) units[index] ||= [];
+    state.couchAddons[name] = units;
+    const item = Array.from(document.querySelectorAll('#numbers3 .config-num-item'))
+        .find(element => element.dataset.product === name);
+    const container = item.querySelector('.config-couch-addons');
+    container.hidden = quantity === 0;
+    container.replaceChildren();
+    units.forEach((selected, unitIndex) => {
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'config-addon-unit';
+        const legend = document.createElement('legend');
+        legend.textContent = quantity > 1 ? `${name} ${unitIndex + 1} · Extras` : 'Passende Extras für Ihre Couch';
+        fieldset.appendChild(legend);
+        COUCH_ADDONS.forEach(addon => {
+            const label = document.createElement('label');
+            label.className = 'config-addon-option';
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = addon.id;
+            checkbox.checked = selected.includes(addon.id);
+            checkbox.dataset.addon = addon.id;
+            checkbox.setAttribute('aria-label', `${name} ${unitIndex + 1}: ${addon.name}, +${addon.prices[name]} Euro`);
+            const copy = document.createElement('span');
+            copy.className = 'config-addon-copy';
+            const title = document.createElement('span');
+            title.textContent = addon.name;
+            const description = document.createElement('small');
+            description.textContent = addon.description;
+            copy.append(title, description);
+            const price = document.createElement('strong');
+            price.className = 'config-addon-price';
+            price.textContent = `+${addon.prices[name]} €`;
+            label.append(checkbox, copy, price);
+            fieldset.appendChild(label);
+            checkbox.addEventListener('change', () => {
+                let next = state.couchAddons[name][unitIndex].filter(id => id !== addon.id);
+                if (checkbox.checked) next.push(addon.id);
+                // The intensive treatment already includes odor treatment.
+                if (next.includes('intensive')) next = next.filter(id => id !== 'odor');
+                state.couchAddons[name][unitIndex] = next;
+                syncAddonInputs(fieldset, next);
+                updateSummary();
+            });
+        });
+        syncAddonInputs(fieldset, selected);
+        container.appendChild(fieldset);
+    });
+    if (quantity > 0) {
+        const note = document.createElement('p');
+        note.className = 'config-addon-note';
+        note.textContent = 'Optional, je Couch. Behandlung je nach Material und Zustand; vollständige Flecken- oder Geruchsentfernung kann nicht garantiert werden.';
+        container.appendChild(note);
+    }
+}
+
+function syncAddonInputs(fieldset, selected) {
+    fieldset.querySelectorAll('input').forEach(input => {
+        input.checked = selected.includes(input.value);
+        input.disabled = input.value === 'odor' && selected.includes('intensive');
+        if (input.value === 'odor') {
+            input.closest('label').querySelector('small').textContent = input.disabled
+                ? 'In der gewählten Intensivreinigung bereits enthalten.'
+                : COUCH_ADDONS.find(addon => addon.id === 'odor').description;
+        }
+    });
+}
+
+function getSelectedServices(selection = state) {
+    const services = [];
+    STEPS[2].numbers.forEach(product => {
+        const quantity = selection.quantities[product.name] || 0;
+        const visible = selection.serviceType === 'Beides'
+            || (selection.serviceType === 'Polstermöbel' && product.category === 'polster')
+            || (selection.serviceType === 'Matratzen' && product.category === 'matratze');
+        if (!visible || quantity <= 0) return;
+        services.push({ name: product.name, quantity, pricePerUnit: product.price,
+            totalPrice: product.price * quantity, duration: product.duration * quantity, category: product.category });
+        (selection.couchAddons[product.name] || []).slice(0, quantity).forEach((selected, unitIndex) => {
+            COUCH_ADDONS.forEach(addon => {
+                if (!selected.includes(addon.id) || addon.prices[product.name] === undefined) return;
+                if (addon.id === 'odor' && selected.includes('intensive')) return;
+                services.push({
+                    name: `${product.name} ${unitIndex + 1}: ${addon.name}`,
+                    quantity: 1, pricePerUnit: addon.prices[product.name], totalPrice: addon.prices[product.name],
+                    duration: addon.duration, category: product.category, addonId: addon.id,
+                    parentProduct: product.name, parentUnit: unitIndex + 1
+                });
+            });
+        });
+    });
+    return services;
+}
+
+// The n8n build embeds this exact pure calculation and its catalog. Keep DOM
+// access in updateSummary; pricing must also run without a browser on the server.
+function calculateBooking(selection = state) {
+    const services = getSelectedServices(selection);
+    const baseTotal = services.reduce((sum, item) => sum + (item.addonId ? 0 : item.totalPrice), 0);
+    const addonTotal = services.reduce((sum, item) => sum + (item.addonId ? item.totalPrice : 0), 0);
+    const subtotal = baseTotal + addonTotal;
+    const discountFactor = selection.customerType === 'Geschäftskunde' ? 0.9 : 1;
+    const conditionPercent = Math.max(0, ...selection.conditions.map(condition => DYNAMIC_CONTENT.conditions[condition]?.surcharge || 0));
+    // Preserve the existing pet treatment for other furniture. L-/U-Couch
+    // treatments are charged exclusively through their explicitly selected extras.
+    const otherFurnitureTotal = services.filter(item => !item.addonId && !hasCouchAddons(item.name))
+        .reduce((sum, item) => sum + item.totalPrice, 0);
+    const petSurcharge = selection.conditions.includes('Haustiere') && conditionPercent === 0
+        ? otherFurnitureTotal * 0.1 * discountFactor : 0;
+    const zone = DYNAMIC_CONTENT.locations[selection.location]?.zone;
+    const minimum = getZoneRule(zone).minOrder;
+    const subtotalAfterDiscount = subtotal * discountFactor;
+    const conditionSurcharge = subtotalAfterDiscount * conditionPercent / 100;
+    const beforeMinimum = subtotalAfterDiscount + conditionSurcharge + petSurcharge + 20;
+    const minimumAdjustment = Math.max(0, (subtotal > 0 ? minimum : 0) - beforeMinimum);
+    const finalTotal = Math.round(beforeMinimum + minimumAdjustment);
+    const cents = value => Math.round((value + Number.EPSILON) * 100) / 100;
+    const discountAmount = cents(subtotal - subtotalAfterDiscount);
+    const roundingAdjustment = cents(finalTotal - (subtotal - discountAmount
+        + cents(conditionSurcharge) + cents(petSurcharge) + 20 + cents(minimumAdjustment)));
+    return { services, baseTotal, addonTotal, subtotal, finalTotal, conditionPercent, petSurcharge, otherFurnitureTotal,
+        discountPercent: discountFactor === 1 ? 0 : 10, discountAmount,
+        subtotalAfterDiscount: cents(subtotalAfterDiscount), conditionSurcharge: cents(conditionSurcharge),
+        travelFee: 20, minimum, minimumAdjustment: cents(minimumAdjustment), roundingAdjustment,
+        totalDuration: services.reduce((sum, item) => sum + item.duration, 0),
+        itemCount: services.filter(item => !item.addonId).reduce((sum, item) => sum + item.quantity, 0) };
 }
 
 function updateVisibleProducts() {
@@ -372,6 +526,12 @@ function updateVisibleProducts() {
         else shouldShow = true; // Beides or fallback
 
         item.style.display = shouldShow ? 'flex' : 'none';
+        if (!shouldShow) {
+            const name = item.dataset.product;
+            state.quantities[name] = 0;
+            document.getElementById(`qty-${name.replace(/\s/g, '-')}`).textContent = '0';
+            renderCouchAddons(name);
+        }
         if (shouldShow && started) item.classList.add('visible');
     });
 }
@@ -379,23 +539,9 @@ function updateVisibleProducts() {
 function changeQty(name, delta) {
     state.quantities[name] = Math.max(0, (state.quantities[name] || 0) + delta);
     document.getElementById(`qty-${name.replace(/\s/g, '-')}`).textContent = state.quantities[name];
+    renderCouchAddons(name);
     updateSummary();
     updateHeroBadges();
-
-    // 🆕 FRISSÍTSD A NAPTÁR DURATION-T! (v3.1)
-    if (typeof BookingCalendar !== 'undefined' && BookingCalendar.setRequiredDuration) {
-        const products = STEPS[2].numbers;
-        let totalDuration = 0;
-        Object.entries(state.quantities).forEach(([n, qty]) => {
-            if (qty > 0) {
-                const product = products.find(p => p.name === n);
-                if (product) {
-                    totalDuration += product.duration * qty;
-                }
-            }
-        });
-        BookingCalendar.setRequiredDuration(totalDuration);
-    }
 }
 
 function handleLocationChange(select) {
@@ -444,37 +590,35 @@ function handleLocationChange(select) {
 }
 
 function updateSummary() {
-    let baseTotal = 0, totalDuration = 0;
-    const items = [], products = STEPS[2].numbers;
-
-    Object.entries(state.quantities).forEach(([name, qty]) => {
-        if (qty > 0) {
-            const product = products.find(p => p.name === name);
-            if (product) {
-                baseTotal += product.price * qty;
-                totalDuration += product.duration * qty;
-                items.push(`${qty}× ${name}`);
-            }
+    const quote = calculateBooking();
+    const { baseTotal, totalDuration, finalTotal } = quote;
+    const items = quote.services.map(item => `${item.quantity}× ${item.name} · ${item.totalPrice} €`);
+    document.getElementById('basePrice').textContent = baseTotal;
+    document.getElementById('summaryAddons').hidden = quote.addonTotal === 0;
+    document.getElementById('addonsPrice').textContent = quote.addonTotal;
+    document.getElementById('summaryConditions').hidden = quote.conditionPercent === 0;
+    document.getElementById('conditionPercent').textContent = quote.conditionPercent;
+    document.getElementById('summaryPets').hidden = quote.petSurcharge === 0;
+    document.getElementById('petsPrice').textContent = quote.petSurcharge.toLocaleString('de-AT', { maximumFractionDigits: 2 });
+    document.getElementById('summaryMinimumAdjustment').hidden = quote.minimumAdjustment === 0;
+    document.getElementById('minimumAdjustmentPrice').textContent = quote.minimumAdjustment.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.getElementById('summaryRounding').hidden = quote.roundingAdjustment === 0;
+    document.getElementById('roundingPrice').textContent = (quote.roundingAdjustment > 0 ? '+' : '')
+        + quote.roundingAdjustment.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    document.querySelectorAll('#chips4 .config-chip').forEach(chip => {
+        if (chip.textContent.startsWith('Haustiere')) {
+            chip.textContent = quote.otherFurnitureTotal > 0
+                ? 'Haustiere (+10% auf andere Möbel)'
+                : 'Haustiere (Hinweis, kostenlos)';
         }
     });
 
-    let finalTotal = baseTotal;
-
     // 1. ÜGYFÉLTÍPUS KEDVEZMÉNY
     if (state.customerType === 'Geschäftskunde') {
-        finalTotal = baseTotal * 0.9;
         document.getElementById('summaryDiscount').style.display = 'flex';
     } else {
         document.getElementById('summaryDiscount').style.display = 'none';
     }
-
-    // 2. ÁLLAPOT FELÁR (conditions)
-    let conditionSurcharge = 0;
-    state.conditions.forEach(cond => {
-        const data = DYNAMIC_CONTENT.conditions[cond];
-        if (data?.surcharge) conditionSurcharge = Math.max(conditionSurcharge, data.surcharge);
-    });
-    if (conditionSurcharge > 0) finalTotal *= (1 + conditionSurcharge / 100);
 
     // 3. ANFAHRTSKOSTEN (fix 20€)
     const anfahrtskosten = 20;
@@ -484,16 +628,12 @@ function updateSummary() {
         document.getElementById('anfahrtAmount').textContent = `+${anfahrtskosten}`;
     }
 
-    // 4. VÉGÖSSZEG
-    finalTotal += anfahrtskosten;
-
     // 4b. MINDESTBESTELLWERT (zonenabhängig: 0 € Burgenland / 199 € angrenzend / 299 € weiter entfernt)
     const zone = (state.location && DYNAMIC_CONTENT.locations[state.location])
         ? DYNAMIC_CONTENT.locations[state.location].zone : null;
     const zoneMinOrder = getZoneRule(zone).minOrder;
     const mindestEl = document.getElementById('summaryMindest');
     if (zoneMinOrder > 0 && baseTotal > 0) {
-        if (finalTotal < zoneMinOrder) finalTotal = zoneMinOrder;
         if (mindestEl) {
             mindestEl.style.display = 'flex';
             // Optional: falls ein Betrags-Element existiert, den korrekten Mindestwert anzeigen
@@ -532,7 +672,16 @@ function updateSummary() {
 
     // 🆕 UPDATE CALENDAR WITH REQUIRED DURATION
     if (typeof BookingCalendar !== 'undefined' && BookingCalendar.setRequiredDuration) {
-        BookingCalendar.setRequiredDuration(totalDuration);
+        if (BookingCalendar.state.requiredDuration !== totalDuration) {
+            // A longer order must not retain a previously confirmed, shorter slot.
+            if (BookingCalendar.getSelectedSlot()) {
+                BookingCalendar.backToCalendar();
+                state.selectedSlot = null;
+                state.selectedDate = null;
+                document.getElementById('summaryTiming').style.display = 'none';
+            }
+            BookingCalendar.setRequiredDuration(totalDuration);
+        }
     }
 }
 
@@ -815,7 +964,8 @@ function submitForm() {
     }
 
     // Check if any products selected
-    const hasProducts = Object.values(state.quantities).some(qty => qty > 0);
+    const quote = calculateBooking();
+    const hasProducts = quote.itemCount > 0;
     if (!hasProducts) {
         alert('Bitte wählen Sie mindestens ein Produkt aus.');
         return;
@@ -824,26 +974,7 @@ function submitForm() {
     // ═══════════════════════════════════════════════════════════
     // BUILD SERVICES ARRAY FOR N8N
     // ═══════════════════════════════════════════════════════════
-    const products = STEPS[2].numbers;
-    const services = [];
-    let totalDuration = 0;
-
-    Object.entries(state.quantities).forEach(([itemName, qty]) => {
-        if (qty > 0) {
-            const product = products.find(p => p.name === itemName);
-            if (product) {
-                services.push({
-                    name: itemName,
-                    quantity: qty,
-                    pricePerUnit: product.price,
-                    totalPrice: product.price * qty,
-                    duration: product.duration * qty,
-                    category: product.category
-                });
-                totalDuration += product.duration * qty;
-            }
-        }
-    });
+    const { services, totalDuration } = quote;
 
     // ═══════════════════════════════════════════════════════════
     // GET LOCATION DATA WITH ZONE INFO + EXACT ADDRESS
@@ -866,7 +997,7 @@ function submitForm() {
     // ═══════════════════════════════════════════════════════════
     // CREATE BOOKING PAYLOAD FOR N8N WEBHOOK
     // ═══════════════════════════════════════════════════════════
-    const estimatedPrice = document.getElementById('totalPrice').textContent;
+    const estimatedPrice = quote.finalTotal;
 
     const bookingPayload = {
         // Source identification
@@ -888,6 +1019,7 @@ function submitForm() {
 
         // Location Details & Zone (CRITICAL for Geo-Clustering)
         locationDetails: {
+            locationKey: state.location,
             address: fullAddress,
             street: street,
             plz: plz,
@@ -931,7 +1063,10 @@ function submitForm() {
             estimatedPrice: parseFloat(estimatedPrice),
             currency: 'EUR',
             estimatedDuration: totalDuration,
-            itemCount: services.reduce((sum, s) => sum + s.quantity, 0)
+            itemCount: quote.itemCount,
+            basePrice: quote.baseTotal,
+            addonsPrice: quote.addonTotal,
+            subtotal: quote.subtotal
         },
 
         // Metadata
@@ -962,11 +1097,13 @@ function submitForm() {
         },
         body: JSON.stringify(bookingPayload)
     })
-        .then(response => {
-            if (!response.ok) {
+        .then(async response => {
+            const data = await response.json();
+            // Business/validation rejections must never become fallback emails.
+            if (!response.ok && !data.error) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            return response.json();
+            return data;
         })
         .then(data => {
             console.log('✅ N8N Response:', data);
@@ -974,6 +1111,8 @@ function submitForm() {
             if (data.available === true) {
                 // SUCCESS - Booking slot available
                 showBookingSuccess(data, bookingPayload);
+            } else if (data.error === 'QUOTE_CHANGED') {
+                showQuoteChangedError(data);
             } else if (data.error === 'ZONE_MISMATCH' || data.error === 'ZONE_INCOMPATIBLE') {
                 // Zone mismatch - day reserved for different zone
                 showZoneMismatchError(data);
@@ -984,8 +1123,7 @@ function submitForm() {
                 // Other error (z. B. MIN_ORDER, TIME_NOT_ALLOWED, OUT_OF_SERVICE_AREA)
                 showBookingError(data);
             } else {
-                // Unknown response, treat as success for now
-                showBookingSuccess(data, bookingPayload);
+                showBookingError({ message: 'Die Buchung konnte nicht bestätigt werden. Bitte kontaktieren Sie uns, bevor Sie erneut buchen.' });
             }
         })
         .catch(error => {
@@ -1009,19 +1147,19 @@ function showBookingSuccess(data, payload) {
     const summary = document.getElementById('configSummary');
 
     // 🆕 HASZNÁLD A STATE-ET!
-    const slotStartTime = state.selectedSlot?.startTime || '09:00';
-    const duration = payload.totals?.estimatedDuration || 60;
+    const slotStartTime = data.slot?.startTime || payload.booking.slotStartTime;
+    const duration = data.duration || payload.totals.estimatedDuration;
 
     const [startH, startM] = slotStartTime.split(':').map(Number);
     const endMinutes = startH * 60 + startM + duration;
     const endH = Math.floor(endMinutes / 60);
     const endM = endMinutes % 60;
-    const slotEndTime = `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
+    const slotEndTime = data.slot?.endTime || `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
 
     const slotInfo = `
         <div class="booking-slot-info">
-            <p><strong>📅 Termin:</strong> ${state.selectedDate}</p>
-            <p><strong>🕐 Zeit:</strong> ${slotStartTime} - ${slotEndTime}</p>
+            <p><strong>📅 Termin:</strong> ${escapeBookingHtml(data.slot?.date || payload.booking.preferredDate)}</p>
+            <p><strong>🕐 Zeit:</strong> ${escapeBookingHtml(slotStartTime)} - ${escapeBookingHtml(slotEndTime)}</p>
         </div>
     `;
 
@@ -1031,7 +1169,7 @@ function showBookingSuccess(data, payload) {
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <h4 class="config-success-title">Anfrage erfolgreich gesendet!</h4>
-            <p class="config-success-text">Vielen Dank, ${payload.customer.name}!</p>
+            <p class="config-success-text">Vielen Dank, ${escapeBookingHtml(payload.customer.name)}!</p>
             ${slotInfo}
             <p class="config-success-text">Bei Fragen kontaktieren Sie uns gerne unter <a href="mailto:info@ecocleanposlterreinigung.at">info@ecocleanposlterreinigung.at
             </a>.</p>
@@ -1080,12 +1218,41 @@ function showBookingError(data) {
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <h4 class="config-error-title">Fehler aufgetreten</h4>
-            <p class="config-error-text">${data.message || 'Bitte versuchen Sie es später erneut oder rufen Sie uns an.'}</p>
+            <p class="config-error-text">${escapeBookingHtml(data.message || 'Bitte versuchen Sie es später erneut oder rufen Sie uns an.')}</p>
             <a href="tel:+4366499754216" class="config-phone-btn">
                 📞 0664 9975 4216
             </a>
         </div>
     `;
+}
+
+function escapeBookingHtml(value) {
+    return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+}
+
+function showQuoteChangedError(data) {
+    // Keep the current selections visible; a new quote requires a fresh review.
+    document.getElementById('bookingQuoteError')?.remove();
+    const notice = document.createElement('div');
+    notice.id = 'bookingQuoteError';
+    notice.className = 'config-error';
+    notice.setAttribute('role', 'alert');
+    const message = document.createElement('p');
+    message.textContent = data.message || 'Bitte laden Sie das aktuelle Angebot und bestätigen Sie es erneut.';
+    notice.appendChild(message);
+    const pricing = data.details?.pricing;
+    if (pricing && Number.isFinite(pricing.finalPrice)) {
+        const amount = document.createElement('p');
+        amount.textContent = `Aktueller Gesamtpreis: ${pricing.finalPrice.toLocaleString('de-AT')} € inkl. Anfahrt. Es wurde kein Termin gebucht.`;
+        notice.appendChild(amount);
+    }
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'config-retry-btn';
+    retry.textContent = 'Aktuelles Angebot laden';
+    retry.onclick = () => window.location.reload();
+    notice.appendChild(retry);
+    document.querySelector('.config-contact').prepend(notice);
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1102,12 +1269,12 @@ function fallbackToFormSubmit(payload) {
     document.getElementById('form_customerType').value = payload.customer.type;
     document.getElementById('form_serviceType').value = payload.booking.serviceType;
 
-    const itemsList = payload.services.map(s => `${s.quantity}× ${s.name}`).join(', ');
+    const itemsList = payload.services.map(s => `${s.quantity}× ${s.name} (${s.totalPrice} €)`).join(', ');
     document.getElementById('form_items').value = itemsList || 'Keine';
     document.getElementById('form_conditions').value = payload.booking.conditions.length > 0
         ? payload.booking.conditions.join(', ')
         : 'Keine';
-    document.getElementById('form_location').value = payload.location.city;
+    document.getElementById('form_location').value = payload.location;
     document.getElementById('form_price').value = `€${payload.totals.estimatedPrice}`;
     document.getElementById('form_duration').value = `${payload.totals.estimatedDuration} Min.`;
 
@@ -1158,6 +1325,10 @@ function init() {
     buildChips('chips2', STEPS[1].chips, 2);
     buildNumbers('numbers3', STEPS[2].numbers);
     buildChips('chips4', STEPS[3].chips, 4, true);
+    document.querySelectorAll('#chips4 .config-chip').forEach(chip => {
+        if (chip.textContent === 'Haustiere') chip.textContent = 'Haustiere (Hinweis, kostenlos)';
+        if (chip.textContent === 'Allergiker') chip.textContent = 'Allergiker (+10%)';
+    });
     // STEPS[5] eltávolítva - nem létezik (a tömb 5 elemű, 0-4 index).
     // Az 5. lépés (STEPS[4]) egy select-mező, a 6. "lépés" a naptár, nem chip.
 
