@@ -84,3 +84,5 @@
 .config-addon-total>strong{flex-shrink:0;white-space:nowrap;}
 .px-site .config-numbers{align-items:start;}
 @media(max-width:700px){.px-site .config-couch-item{grid-column:1 / -1;}.px-site .config-couch-item .config-num-label{font-size:14px !important;}}
+/* Keep the new landscape before/after photos fully visible at every width. */
+.px-comparison .px-compare-stage { height: auto; aspect-ratio: 4 / 3; }

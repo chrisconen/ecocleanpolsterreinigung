@@ -97,16 +97,16 @@ const STEPS = [
     { id: 5, label: "Wo befinden Sie sich?", select: true }
 ];
 
-// Per-couch extras. Prices in EUR and additional working time in minutes.
+// Per-furniture extras. Prices in EUR and additional working time in minutes.
 // Keep this catalog as the single source for UI, totals and booking line items.
 const COUCH_ADDONS = [
-    { id: 'sleep', name: 'Schlaffunktion / ausziehbare Liegefläche', description: 'Zusätzliche Liegefläche mitreinigen.', prices: { 'L-Couch': 30, 'U-Couch': 40 }, duration: 20 },
-    { id: 'odor', name: 'Hunde- & Katzengerüche behandeln', description: 'Gezielte Geruchsbehandlung. Bei Urin bitte Intensivreinigung wählen.', prices: { 'L-Couch': 25, 'U-Couch': 35 }, duration: 15 },
-    { id: 'protection', name: 'Imprägnierung / Fleckschutz', description: 'Zusätzlicher Schutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45 }, duration: 15 },
-    { id: 'intensive', name: 'Intensivreinigung bei starker Verschmutzung / Urin', description: 'Zusätzliche Behandlung belasteter Stellen, inklusive Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59 }, duration: 30 },
-    { id: 'hair', name: 'Intensive Tierhaarentfernung', description: 'Zusätzlicher Aufwand für festsitzende Hunde- und Katzenhaare.', prices: { 'L-Couch': 20, 'U-Couch': 30 }, duration: 15 }
+    { id: 'sleep', name: 'Schlaffunktion / ausziehbare Liegefläche', description: 'Zusätzliche Liegefläche mitreinigen.', prices: { 'L-Couch': 30, 'U-Couch': 40, Sofa: 25 }, durations: { 'L-Couch': 20, 'U-Couch': 20, Sofa: 20 } },
+    { id: 'odor', name: 'Hunde- & Katzengerüche behandeln', description: 'Gezielte Geruchsbehandlung. Bei Urin bitte Intensivreinigung wählen.', prices: { 'L-Couch': 25, 'U-Couch': 35, Sofa: 20, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
+    { id: 'protection', name: 'Imprägnierung / Fleckschutz', description: 'Zusätzlicher Schutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45, Sofa: 25, Sessel: 15, Stuhl: 7 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
+    { id: 'intensive', name: 'Intensivreinigung bei starker Verschmutzung / Urin', description: 'Zusätzliche Behandlung belasteter Stellen, inklusive Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59, Sofa: 39, Sessel: 19, Stuhl: 10 }, durations: { 'L-Couch': 30, 'U-Couch': 30, Sofa: 30, Sessel: 15, Stuhl: 10 } },
+    { id: 'hair', name: 'Intensive Tierhaarentfernung', description: 'Zusätzlicher Aufwand für festsitzende Hunde- und Katzenhaare.', prices: { 'L-Couch': 20, 'U-Couch': 30, Sofa: 15, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } }
 ];
-const hasCouchAddons = name => COUCH_ADDONS[0].prices[name] !== undefined;
+const hasCouchAddons = name => COUCH_ADDONS.some(addon => Object.hasOwn(addon.prices, name));
 
 const DYNAMIC_CONTENT = {
     customerType: {
@@ -119,7 +119,7 @@ const DYNAMIC_CONTENT = {
         "Beides": { title: "Komplett-Reinigung", desc: "Das beste Ergebnis für Ihr Zuhause", icon: "✨", badge: "EMPFOHLEN", features: ["Alles inklusive"] }
     },
     conditions: {
-        "Haustiere": { title: "Haustiere im Haushalt", desc: "L-/U-Couch: Extras einzeln wählen. Andere Möbel: 10% Aufpreis.", icon: "🐾", surcharge: 0 },
+        "Haustiere": { title: "Haustiere im Haushalt", desc: "Polstermöbel: Extras einzeln wählen. Matratzen: 10% Aufpreis.", icon: "🐾", surcharge: 0 },
         "Kleinkinder": { title: "Kindersicher", desc: "100% biologische Reinigung", icon: "👶", badge: "BIO", surcharge: 0 },
         "Allergiker": { title: "Anti-Allergen", desc: "99,9% Allergenentfernung", icon: "🌿", badge: "+10%", surcharge: 10 }
     },
@@ -375,9 +375,10 @@ function renderCouchAddons(name) {
         const fieldset = document.createElement('fieldset');
         fieldset.className = 'config-addon-unit';
         const legend = document.createElement('legend');
-        legend.textContent = quantity > 1 ? `${name} ${unitIndex + 1} · Extras` : 'Passende Extras für Ihre Couch';
+        legend.textContent = `${name}${quantity > 1 ? ` ${unitIndex + 1}` : ''} · Passende Extras`;
         fieldset.appendChild(legend);
         COUCH_ADDONS.forEach(addon => {
+            if (!Object.hasOwn(addon.prices, name)) return;
             const label = document.createElement('label');
             label.className = 'config-addon-option';
             const checkbox = document.createElement('input');
@@ -414,7 +415,7 @@ function renderCouchAddons(name) {
     if (quantity > 0) {
         const note = document.createElement('p');
         note.className = 'config-addon-note';
-        note.textContent = 'Optional, je Couch. Behandlung je nach Material und Zustand; vollständige Flecken- oder Geruchsentfernung kann nicht garantiert werden.';
+        note.textContent = 'Optional, je Möbelstück. Behandlung je nach Material und Zustand; vollständige Flecken- oder Geruchsentfernung kann nicht garantiert werden.';
         container.appendChild(note);
     }
 }
@@ -448,7 +449,7 @@ function getSelectedServices(selection = state) {
                 services.push({
                     name: `${product.name} ${unitIndex + 1}: ${addon.name}`,
                     quantity: 1, pricePerUnit: addon.prices[product.name], totalPrice: addon.prices[product.name],
-                    duration: addon.duration, category: product.category, addonId: addon.id,
+                    duration: addon.durations[product.name], category: product.category, addonId: addon.id,
                     parentProduct: product.name, parentUnit: unitIndex + 1
                 });
             });
@@ -466,7 +467,7 @@ function calculateBooking(selection = state) {
     const subtotal = baseTotal + addonTotal;
     const discountFactor = selection.customerType === 'Geschäftskunde' ? 0.9 : 1;
     const conditionPercent = Math.max(0, ...selection.conditions.map(condition => DYNAMIC_CONTENT.conditions[condition]?.surcharge || 0));
-    // Preserve the existing pet treatment for other furniture. L-/U-Couch
+    // Preserve the existing pet treatment for mattresses. Upholstery
     // treatments are charged exclusively through their explicitly selected extras.
     const otherFurnitureTotal = services.filter(item => !item.addonId && !hasCouchAddons(item.name))
         .reduce((sum, item) => sum + item.totalPrice, 0);
@@ -608,7 +609,7 @@ function updateSummary() {
     document.querySelectorAll('#chips4 .config-chip').forEach(chip => {
         if (chip.textContent.startsWith('Haustiere')) {
             chip.textContent = quote.otherFurnitureTotal > 0
-                ? 'Haustiere (+10% auf andere Möbel)'
+                ? 'Haustiere (+10% auf Matratzen)'
                 : 'Haustiere (Hinweis, kostenlos)';
         }
     });
