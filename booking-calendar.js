@@ -47,35 +47,36 @@ const BookingCalendar = {
     // ═══════════════════════════════════════════════════════════════════════════
     i18n: {
         de: {
-            months: ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+            months: ['Jänner', 'Februar', 'März', 'April', 'Mai', 'Juni',
                 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'],
             weekdays: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-            selectCity: 'Bitte wählen Sie zuerst Ihren Standort',
+            selectCity: 'Bitte wählen Sie zuerst den Ort der Reinigung.',
             loading: 'Verfügbarkeit wird geladen...',
             free: 'Verfügbar',
-            limited: 'Teilweise verfügbar',
-            zoneBlocked: 'Andere Region',
+            limited: 'Noch einzelne Termine frei',
+            zoneBlocked: 'Einsatz in anderer Region',
             full: 'Ausgebucht',
-            notEnoughTime: 'Nicht genug Zeit',
+            notEnoughTime: 'Kein passendes Zeitfenster',
             weekend: 'Wochenende',
             past: 'Vergangen',
-            selectSlot: 'Zeitfenster wählen',
+            selectSlot: 'Uhrzeit wählen',
+            selectedSlot: 'Gewählte Uhrzeit',
             back: '← Zurück zum Kalender',
-            requiredTime: 'Benötigte Zeit',
+            requiredTime: 'Dauer Ihrer Reinigung',
             availableTime: 'Verfügbare Zeit',
             firstSlot: 'Erster Termin',
             laterSlot: 'Späterer Termin',
             booked: 'Gebucht',
-            slotFits: 'Passt! ✓',
-            slotTooShort: 'Nicht genug Zeit',
-            flexWarning: '⚠️ Dies ist NICHT der erste Termin des Tages',
-            flexExplain: 'Die Ankunftszeit kann um ±30 Minuten variieren.',
-            flexExpected: 'Erwartete Ankunft',
-            flexAccept: 'Ich verstehe und akzeptiere die ±30 Min Flexibilität',
-            flexRequired: 'Bitte bestätigen Sie die Flexibilität',
-            minutes: 'Min',
-            confirmSlot: 'Termin bestätigen',
-            noAllowedTimes: 'Für Ihre Region bieten wir feste Anfahrtszeiten (11:00 / 13:00 Uhr) – an diesem Tag ist aktuell keine davon frei. Bitte wählen Sie einen anderen Tag.'
+            slotFits: 'Ausreichend Zeit ✓',
+            slotTooShort: 'Zeitfenster zu kurz',
+            flexWarning: 'Hinweis zur Ankunftszeit',
+            flexExplain: 'Da wir vorher einen anderen Termin haben, können wir bis zu 30 Minuten früher oder später eintreffen.',
+            flexExpected: 'Voraussichtliche Ankunft',
+            flexAccept: 'Ich bin damit einverstanden, dass Sie bis zu 30 Minuten früher oder später eintreffen können.',
+            flexRequired: 'Bitte bestätigen Sie, dass eine Ankunft bis zu 30 Minuten früher oder später für Sie möglich ist.',
+            minutes: 'Min.',
+            confirmSlot: 'Termin übernehmen',
+            noAllowedTimes: 'In Ihrer Region beginnen unsere Termine um 11:00 oder 13:00 Uhr. An diesem Tag ist zu diesen Zeiten leider kein passender Termin frei. Bitte wählen Sie einen anderen Tag.'
         },
         hu: {
             months: ['Január', 'Február', 'Március', 'Április', 'Május', 'Június',
@@ -91,6 +92,7 @@ const BookingCalendar = {
             weekend: 'Hétvége',
             past: 'Elmúlt',
             selectSlot: 'Időpont választás',
+            selectedSlot: 'Kiválasztott időpont',
             back: '← Vissza a naptárhoz',
             requiredTime: 'Szükséges idő',
             availableTime: 'Elérhető idő',
@@ -611,7 +613,7 @@ const BookingCalendar = {
 
             html += `
                 <div class="selected-slot-details ${!slot.isFirstSlot ? 'needs-flex' : ''}">
-                    <h4>✅ ${slot.startTime} ${this.lang.selectSlot}</h4>
+                    <h4>✅ ${this.lang.selectedSlot}: ${slot.startTime}</h4>
             `;
 
             if (!slot.isFirstSlot) {

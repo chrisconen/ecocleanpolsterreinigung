@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       tiles.scrollTop = 0;
       explorer.querySelectorAll('[data-region]').forEach(path => path.setAttribute('aria-pressed', String(!term && path.dataset.region === selectedRegion.code)));
       explorer.querySelectorAll('[data-map-label]').forEach(label => label.classList.toggle('is-selected', !term && label.dataset.mapLabel === selectedRegion.code));
-      explorer.querySelector('[data-region-note]').textContent = term ? 'Wählen Sie eine Stadt für Leistungen und Informationen vor Ort. Anfahrt und Termine sehen Sie im Konfigurator.' : (selectedRegion.min ? 'Mindestbestellwert in dieser Region: ' + selectedRegion.min + ' €. ' : 'Kein Mindestbestellwert im Burgenland. ') + 'Anfahrt und verfügbare Termine sehen Sie im Konfigurator.';
+      explorer.querySelector('[data-region-note]').textContent = term ? 'Wählen Sie Ihre Stadt, um mehr über unsere Leistungen vor Ort zu erfahren. Anfahrtskosten und freie Termine finden Sie im Preisrechner.' : (selectedRegion.min ? 'Mindestbestellwert in dieser Region: ' + selectedRegion.min + ' €. ' : 'Kein Mindestbestellwert im Burgenland. ') + 'Anfahrtskosten und freie Termine finden Sie im Preisrechner.';
     }
     function chooseRegion(code) {
       selectedRegion = regions.find(region => region.code === code) || regions[0];

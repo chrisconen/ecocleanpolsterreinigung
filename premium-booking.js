@@ -79,7 +79,7 @@ const STEPS = [
     { id: 1, label: "Sind Sie Privat- oder Geschäftskunde?", chips: ["Privatkunde", "Geschäftskunde"] },
     { id: 2, label: "Was möchten Sie reinigen lassen?", chips: ["Polstermöbel", "Matratzen", "Beides"] },
     {
-        id: 3, label: "Welche Möbelstücke? (Anzahl)", numbers: [
+        id: 3, label: "Welche Möbel möchten Sie reinigen lassen?", numbers: [
             { name: "L-Couch", price: 119, duration: 60, category: "polster" },
             { name: "U-Couch", price: 159, duration: 90, category: "polster" },
             { name: "Sofa", price: 85, duration: 45, category: "polster" },
@@ -93,35 +93,35 @@ const STEPS = [
             { name: "Matratze Doppel (Nass)", price: 115, duration: 60, category: "matratze" }
         ]
     },
-    { id: 4, label: "Besondere Umstände?", chips: ["Haustiere", "Kleinkinder", "Allergiker"], multi: true },
-    { id: 5, label: "Wo befinden Sie sich?", select: true }
+    { id: 4, label: "Was sollten wir bei der Reinigung beachten?", chips: ["Haustiere", "Kleinkinder", "Allergiker"], multi: true },
+    { id: 5, label: "Wo soll die Reinigung stattfinden?", select: true }
 ];
 
 // Per-furniture extras. Prices in EUR and additional working time in minutes.
 // Keep this catalog as the single source for UI, totals and booking line items.
 const COUCH_ADDONS = [
-    { id: 'sleep', name: 'Schlaffunktion / ausziehbare Liegefläche', description: 'Zusätzliche Liegefläche mitreinigen.', prices: { 'L-Couch': 30, 'U-Couch': 40, Sofa: 25 }, durations: { 'L-Couch': 20, 'U-Couch': 20, Sofa: 20 } },
-    { id: 'odor', name: 'Hunde- & Katzengerüche behandeln', description: 'Gezielte Geruchsbehandlung. Bei Urin bitte Intensivreinigung wählen.', prices: { 'L-Couch': 25, 'U-Couch': 35, Sofa: 20, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
-    { id: 'protection', name: 'Imprägnierung / Fleckschutz', description: 'Zusätzlicher Schutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45, Sofa: 25, Sessel: 15, Stuhl: 7 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
-    { id: 'intensive', name: 'Intensivreinigung bei starker Verschmutzung / Urin', description: 'Zusätzliche Behandlung belasteter Stellen, inklusive Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59, Sofa: 39, Sessel: 19, Stuhl: 10 }, durations: { 'L-Couch': 30, 'U-Couch': 30, Sofa: 30, Sessel: 15, Stuhl: 10 } },
-    { id: 'hair', name: 'Intensive Tierhaarentfernung', description: 'Zusätzlicher Aufwand für festsitzende Hunde- und Katzenhaare.', prices: { 'L-Couch': 20, 'U-Couch': 30, Sofa: 15, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } }
+    { id: 'sleep', name: 'Ausziehbare Liegefläche mitreinigen', description: 'Wir reinigen auch die zusätzliche Liegefläche Ihrer Schlafcouch.', prices: { 'L-Couch': 30, 'U-Couch': 40, Sofa: 25 }, durations: { 'L-Couch': 20, 'U-Couch': 20, Sofa: 20 } },
+    { id: 'odor', name: 'Geruchsbehandlung bei Haustieren', description: 'Zusätzliche Behandlung von Hunde- und Katzengerüchen. Bei Urinflecken wählen Sie bitte die Intensivreinigung.', prices: { 'L-Couch': 25, 'U-Couch': 35, Sofa: 20, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
+    { id: 'protection', name: 'Imprägnierung zum Fleckschutz', description: 'Zusätzlicher Fleckschutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45, Sofa: 25, Sessel: 15, Stuhl: 7 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
+    { id: 'intensive', name: 'Intensivreinigung bei starken Verschmutzungen / Urin', description: 'Zusätzliche Reinigung stark verschmutzter Stellen, einschließlich Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59, Sofa: 39, Sessel: 19, Stuhl: 10 }, durations: { 'L-Couch': 30, 'U-Couch': 30, Sofa: 30, Sessel: 15, Stuhl: 10 } },
+    { id: 'hair', name: 'Festsitzende Tierhaare entfernen', description: 'Für Hunde- und Katzenhaare, die sich tief im Bezug festgesetzt haben.', prices: { 'L-Couch': 20, 'U-Couch': 30, Sofa: 15, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } }
 ];
 const hasCouchAddons = name => COUCH_ADDONS.some(addon => Object.hasOwn(addon.prices, name));
 
 const DYNAMIC_CONTENT = {
     customerType: {
-        "Privatkunde": { discount: 0, title: "Privatkunden-Service", desc: "Persönliche Betreuung für Ihr Zuhause", icon: "🏠" },
-        "Geschäftskunde": { discount: 10, title: "Geschäftskunden-Vorteil", desc: "10% Rabatt auf alle Leistungen", icon: "🏢", badge: "-10%" }
+        "Privatkunde": { discount: 0, title: "Für Ihr Zuhause", desc: "Persönliche Betreuung für Ihr Zuhause", icon: "🏠" },
+        "Geschäftskunde": { discount: 10, title: "Ihr Firmenrabatt", desc: "10% Rabatt auf Reinigung und Extras", icon: "🏢", badge: "-10%" }
     },
     serviceType: {
-        "Polstermöbel": { title: "Polsterreinigung", desc: "Tiefenreinigung mit HEPA-Filterung", icon: "🛋️", features: ["HEPA-Filter", "Bio-Mittel"] },
-        "Matratzen": { title: "Matratzenreinigung", desc: "UV-C Desinfektion und Tiefenreinigung", icon: "🛏️", features: ["UV-C", "Anti-Allergen"] },
-        "Beides": { title: "Komplett-Reinigung", desc: "Das beste Ergebnis für Ihr Zuhause", icon: "✨", badge: "EMPFOHLEN", features: ["Alles inklusive"] }
+        "Polstermöbel": { title: "Polsterreinigung", desc: "Gründliche Reinigung Ihrer Polstermöbel", icon: "🛋️", features: ["HEPA-Filter", "Bio-Mittel"] },
+        "Matratzen": { title: "Matratzenreinigung", desc: "UV-C-Behandlung und gründliche Reinigung", icon: "🛏️", features: ["UV-C", "Anti-Allergen"] },
+        "Beides": { title: "Kombinierte Reinigung", desc: "Polstermöbel und Matratzen in einem Termin", icon: "✨", badge: "EMPFOHLEN", features: ["Polster & Matratzen"] }
     },
     conditions: {
-        "Haustiere": { title: "Haustiere im Haushalt", desc: "Polstermöbel: Extras einzeln wählen. Matratzen: 10% Aufpreis.", icon: "🐾", surcharge: 0 },
-        "Kleinkinder": { title: "Kindersicher", desc: "100% biologische Reinigung", icon: "👶", badge: "BIO", surcharge: 0 },
-        "Allergiker": { title: "Anti-Allergen", desc: "99,9% Allergenentfernung", icon: "🌿", badge: "+10%", surcharge: 10 }
+        "Haustiere": { title: "Haustiere im Haushalt", desc: "Wählen Sie die gewünschten Extras direkt beim Möbelstück. Bei Matratzen beträgt der Aufpreis 10%.", icon: "🐾", surcharge: 0 },
+        "Kleinkinder": { title: "Kleinkinder im Haushalt", desc: "Wir berücksichtigen Ihren Hinweis bei der Reinigung", icon: "👶", badge: "BIO", surcharge: 0 },
+        "Allergiker": { title: "Zusatzbehandlung für Allergiker", desc: "Zusätzliche Behandlung zur Entfernung von Allergenen", icon: "🌿", badge: "+10%", surcharge: 10 }
     },
     // ═══════════════════════════════════════════════════════════
     // ZONE B LOCATIONS (BURGENLAND / WESTERN BORDER)
@@ -193,7 +193,7 @@ const DYNAMIC_CONTENT = {
         "feldkirch": { name: "Feldkirch", info: "Vorarlberg", zone: "V", country: "AT", travelTime: 370 },
         "lustenau": { name: "Lustenau", info: "Vorarlberg", zone: "V", country: "AT", travelTime: 378 },
         // ── FALLBACK ────────────────────────────────────────────
-        "sonstige": { name: "Sonstige", info: "Wird per Email geklärt", zone: "B", country: "AT", travelTime: 60 }
+        "sonstige": { name: "Sonstige", info: "Individuelles Angebot per E-Mail", zone: "B", country: "AT", travelTime: 60 }
     }
 };
 
@@ -415,7 +415,7 @@ function renderCouchAddons(name) {
     if (quantity > 0) {
         const note = document.createElement('p');
         note.className = 'config-addon-note';
-        note.textContent = 'Optional, je Möbelstück. Behandlung je nach Material und Zustand; vollständige Flecken- oder Geruchsentfernung kann nicht garantiert werden.';
+        note.textContent = 'Die Extras gelten pro Möbelstück. Welche Behandlung geeignet ist, hängt vom Material und Zustand ab. Nicht alle Flecken und Gerüche lassen sich vollständig entfernen.';
         container.appendChild(note);
     }
 }
@@ -426,7 +426,7 @@ function syncAddonInputs(fieldset, selected) {
         input.disabled = input.value === 'odor' && selected.includes('intensive');
         if (input.value === 'odor') {
             input.closest('label').querySelector('small').textContent = input.disabled
-                ? 'In der gewählten Intensivreinigung bereits enthalten.'
+                ? 'Bereits in der gewählten Intensivreinigung enthalten.'
                 : COUCH_ADDONS.find(addon => addon.id === 'odor').description;
         }
     });
@@ -721,7 +721,7 @@ function updateHeroBadges() {
         badges.push({
             icon: "📍",
             title: loc.name,
-            desc: `${loc.info} - 20€ Anfahrtskosten`
+            desc: `${loc.info} · 20 € Anfahrt`
         });
 
         // 5. Mindestbestellwert – prominent highlight badge (zonenabhängig: 199 € / 299 €)
@@ -741,7 +741,7 @@ function updateHeroBadges() {
             badges.push({
                 icon: "🕐",
                 title: "Termine um 11:00 oder 13:00 Uhr",
-                desc: "In dieser Region bieten wir feste Anfahrtszeiten an.",
+                desc: "In dieser Region beginnt die Reinigung um 11:00 oder 13:00 Uhr.",
                 badge: "INFO"
             });
         }
@@ -900,7 +900,7 @@ function submitForm() {
             hasError = true;
         } else if (email !== confirmEmail) {
             emailConfirm.classList.add('error');
-            alert('Die E-Mail-Adressen stimmen nicht überein!');
+            alert('Bitte prüfen Sie Ihre Eingabe: Die E-Mail-Adressen stimmen nicht überein.');
             return;
         }
     }
@@ -950,7 +950,7 @@ function submitForm() {
     }
     // Harte Absicherung: ohne Datum UND Uhrzeit KEINE Buchung senden.
     if (!state.selectedDate || !state.selectedSlot || !state.selectedSlot.startTime) {
-        alert('Bitte wählen und bestätigen Sie zuerst einen Termin im Kalender (Datum + Uhrzeit).');
+        alert('Bitte wählen Sie zuerst Datum und Uhrzeit im Kalender und übernehmen Sie den Termin.');
         return;
     }
 
@@ -968,7 +968,7 @@ function submitForm() {
     const quote = calculateBooking();
     const hasProducts = quote.itemCount > 0;
     if (!hasProducts) {
-        alert('Bitte wählen Sie mindestens ein Produkt aus.');
+        alert('Bitte wählen Sie mindestens ein Möbelstück aus.');
         return;
     }
 
@@ -1169,10 +1169,10 @@ function showBookingSuccess(data, payload) {
             <div class="config-success-icon">
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
-            <h4 class="config-success-title">Anfrage erfolgreich gesendet!</h4>
+            <h4 class="config-success-title">Termin erfolgreich gebucht!</h4>
             <p class="config-success-text">Vielen Dank, ${escapeBookingHtml(payload.customer.name)}!</p>
             ${slotInfo}
-            <p class="config-success-text">Bei Fragen kontaktieren Sie uns gerne unter <a href="mailto:info@ecocleanposlterreinigung.at">info@ecocleanposlterreinigung.at
+            <p class="config-success-text">Bei Fragen kontaktieren Sie uns gerne unter <a href="mailto:info@ecocleanpolsterreinigung.at">info@ecocleanpolsterreinigung.at
             </a>.</p>
         </div>
     `;
@@ -1186,7 +1186,7 @@ function showZoneMismatchError(data) {
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <h4 class="config-error-title">Terminkonflikt</h4>
-            <p class="config-error-text">${data.message || 'Der gewählte Tag ist bereits für eine andere Region reserviert.'}</p>
+            <p class="config-error-text">${data.message || 'An diesem Tag sind wir bereits in einer anderen Region im Einsatz. Bitte wählen Sie einen anderen Tag.'}</p>
             <button class="config-retry-btn" onclick="location.reload()">
                 Anderen Tag wählen
             </button>
@@ -1202,7 +1202,7 @@ function showDayFullError(data) {
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
             <h4 class="config-error-title">Tag ausgebucht</h4>
-            <p class="config-error-text">${data.message || 'Der gewählte Tag ist leider bereits voll ausgebucht.'}</p>
+            <p class="config-error-text">${data.message || 'An diesem Tag sind leider keine Termine mehr frei.'}</p>
             ${data.suggestion ? `<p class="config-suggestion">${data.suggestion.message}</p>` : ''}
             <button class="config-retry-btn" onclick="location.reload()">
                 Neuen Termin anfragen
@@ -1218,7 +1218,7 @@ function showBookingError(data) {
             <div class="config-error-icon">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-            <h4 class="config-error-title">Fehler aufgetreten</h4>
+            <h4 class="config-error-title">Buchung nicht abgeschlossen</h4>
             <p class="config-error-text">${escapeBookingHtml(data.message || 'Bitte versuchen Sie es später erneut oder rufen Sie uns an.')}</p>
             <a href="tel:+4366499754216" class="config-phone-btn">
                 📞 0664 9975 4216
@@ -1239,7 +1239,7 @@ function showQuoteChangedError(data) {
     notice.className = 'config-error';
     notice.setAttribute('role', 'alert');
     const message = document.createElement('p');
-    message.textContent = data.message || 'Bitte laden Sie das aktuelle Angebot und bestätigen Sie es erneut.';
+    message.textContent = data.message || 'Bitte laden Sie das Formular neu und prüfen Sie den aktualisierten Preis, bevor Sie buchen.';
     notice.appendChild(message);
     const pricing = data.details?.pricing;
     if (pricing && Number.isFinite(pricing.finalPrice)) {
@@ -1309,7 +1309,7 @@ function showSuccessMessage() {
                 <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
             <h4 class="config-success-title">Anfrage erfolgreich gesendet!</h4>
-            <p class="config-success-text">Vielen Dank! Wir melden uns innerhalb von 24 Stunden bei Ihnen.</p>
+            <p class="config-success-text">Vielen Dank! Wir prüfen den Buchungsstatus und melden uns innerhalb von 24 Stunden bei Ihnen. Bitte warten Sie unsere Rückmeldung ab, bevor Sie erneut buchen.</p>
         </div>
     `;
 }
@@ -1375,7 +1375,7 @@ function startAnimation() {
     // 1. Activate Button
     const btn = document.getElementById('startBtn');
     btn.classList.add('active');
-    btn.innerHTML = 'Konfigurator aktiv <span style="color:var(--color-accent)">●</span>';
+    btn.innerHTML = 'Ihre Reinigung zusammenstellen <span style="color:var(--color-accent)">●</span>';
 
     // 2. Show Configurator & Hide Hero Image
     const config = document.getElementById('configurator');
@@ -1399,7 +1399,7 @@ function startAnimation() {
         document.getElementById('configIcon').classList.add('visible');
 
         const title = document.getElementById('configTitle');
-        title.textContent = 'Preis-Konfigurator';
+        title.textContent = 'Preis berechnen und Termin wählen';
 
         document.getElementById('configBadge').classList.add('visible');
         document.getElementById('badgeText').textContent = 'LIVE';
