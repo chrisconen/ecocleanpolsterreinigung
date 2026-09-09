@@ -181,8 +181,28 @@ html, body.px-site, .config-body { overflow-x: clip; }
 .cfg-input:focus, .cfg-select:focus, .cfg-textarea:focus { outline: 2px solid var(--cfg-green); outline-offset: 1px; border-color: var(--cfg-green); }
 .cfg-input[aria-invalid="true"] { border-color: #b3261e; background: #fff6f5; }
 .cfg-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; }
-.cfg-error { font-size: 12px; color: #b3261e; margin: -8px 0 12px; }
-.cfg-error[hidden] { display: none; }
+/* ── Fehlermeldungen ─────────────────────────────────────────────────────── */
+/* Direkt am Feld, damit klar ist, welche Angabe gemeint ist. */
+.cfg-field-error { display: flex; align-items: flex-start; gap: 6px; font-size: 12.5px; line-height: 1.5;
+    color: #b3261e; margin: 6px 0 0; }
+.cfg-field-error::before { content: '!'; flex-shrink: 0; display: grid; place-items: center;
+    width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; background: #b3261e; color: #fff;
+    font-size: 10px; font-weight: 700; }
+.cfg-input[aria-invalid="true"], .cfg-select[aria-invalid="true"], .cfg-textarea[aria-invalid="true"] {
+    border-color: #b3261e; background: #fff8f7; }
+
+/* Sammelmeldung über dem Buchen-Knopf: was fehlt, und ein Sprung dorthin. */
+.cfg-alert { border: 1px solid #f0c9c5; border-left-width: 3px; border-radius: 8px; background: #fff6f5;
+    padding: 14px 16px; margin-top: 16px; font-size: 13.5px; line-height: 1.6; color: #7a1f18; }
+.cfg-alert[hidden] { display: none; }
+.cfg-alert.is-warning { border-color: #f0d9a4; border-left-color: #b06a00; background: #fff8e8; color: #6a4a05; }
+.cfg-alert > strong { display: block; margin-bottom: 6px; }
+.cfg-alert ul { margin: 0; padding: 0; list-style: none; }
+.cfg-alert li + li { margin-top: 2px; }
+.cfg-alert li > button { border: 0; background: none; padding: 4px 0; min-height: 30px; text-align: left;
+    font: inherit; color: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.cfg-alert li > button:hover { color: #b3261e; }
+.cfg-alert > p { margin: 0 0 8px; }
 
 /* ── Hinweis-Boxen ───────────────────────────────────────────────────────── */
 .cfg-note { display: flex; gap: 11px; font-size: 12.5px; line-height: 1.65; color: #33463b; background: #f4f8f4;
@@ -254,7 +274,42 @@ html, body.px-site, .config-body { overflow-x: clip; }
 .cfg-rail-actions > button:hover { border-color: var(--cfg-green); color: var(--cfg-green); }
 .cfg-rail-legal { font-size: 11px; line-height: 1.65; color: var(--cfg-muted); margin: 12px 0 0; }
 
+/* ── Ergebnis und Störungen ──────────────────────────────────────────────── */
+/* Nach der Bestätigung ist das Formular gesperrt: die Buchung steht, eine
+   nachträgliche Änderung würde etwas anderes anzeigen als gebucht wurde. */
+.config-body.is-locked .cfg-main { opacity: .5; }
+.config-body.is-locked .cfg-main .cfg-card:hover { transform: none; box-shadow: none; }
+.cfg-rail-result { display: block; max-height: none; }
+.cfg-result { padding: 26px 24px 24px; text-align: center; }
+.cfg-result-icon { display: grid; place-items: center; width: 54px; height: 54px; margin: 0 auto 16px;
+    border-radius: 50%; }
+.cfg-result-icon svg { width: 27px; height: 27px; }
+.cfg-result.is-success .cfg-result-icon { background: var(--cfg-soft); color: #0a7b3f; }
+.cfg-result.is-warning .cfg-result-icon { background: #fff1d9; color: #a06200; }
+.cfg-result h3 { font-size: 22px; letter-spacing: -.6px; line-height: 1.25; margin-bottom: 8px; }
+.cfg-result > p { font-size: 14px; line-height: 1.7; color: var(--cfg-muted); margin: 0; }
+.cfg-result-rows { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 16px;
+    text-align: left; margin: 20px 0 0; padding: 16px 18px; border-radius: 9px; background: #f5f9f5; }
+.cfg-result.is-warning .cfg-result-rows { background: #fff8e8; }
+.cfg-result-rows dt { font-size: 12px; color: var(--cfg-muted); padding: 7px 0; white-space: nowrap; }
+.cfg-result-rows dd { font-size: 13.5px; font-weight: 600; margin: 0; padding: 7px 0; overflow-wrap: anywhere; }
+.cfg-result-rows dt + dd { border-bottom: 1px solid #e6ece6; }
+.cfg-result-rows dt:last-of-type, .cfg-result-rows dd:last-of-type { border-bottom: 0; }
+.cfg-result-rows dt:not(:first-of-type) { border-top: 1px solid #e6ece6; }
+.cfg-result-note { font-size: 12.5px; line-height: 1.65; color: var(--cfg-muted); text-align: left;
+    margin: 16px 0 0; }
+.cfg-result-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+.cfg-result-cta { min-height: 50px; padding: 14px 20px; border: 0; border-radius: 8px;
+    background: var(--cfg-green); color: #fff; font-size: 14.5px; font-weight: 600; cursor: pointer;
+    transition: background .18s; }
+.cfg-result-cta:hover { background: #006f56; }
+.cfg-result-link { min-height: 44px; display: grid; place-items: center; padding: 10px;
+    border: 1px solid var(--cfg-line); border-radius: 8px; background: #fff; font-size: 13px;
+    color: var(--cfg-muted); text-decoration: none; }
+.cfg-result-link:hover { border-color: var(--cfg-green); color: var(--cfg-green); }
+
 /* ── Mobile Preisleiste ──────────────────────────────────────────────────── */
+.cfg-bar[hidden] { display: none !important; }
 .cfg-bar { display: none; position: fixed; inset: auto 0 0; z-index: 60; align-items: center; gap: 12px;
     padding: 11px 18px calc(11px + env(safe-area-inset-bottom)); background: #053c32ee; color: #fff;
     backdrop-filter: blur(14px); }
@@ -296,6 +351,10 @@ html, body.px-site, .config-body { overflow-x: clip; }
     .cfg-wrap *, .cfg-wrap *::before, .cfg-wrap *::after { transition: none !important; animation: none !important; }
 }
 @media print {
+    /* Der ausgedruckte Beleg zeigt die Bestätigung, nicht das Formular. */
+    .cfg-layout:has(.cfg-rail-result) .cfg-main { display: none; }
+    .cfg-layout:has(.cfg-rail-result) { grid-template-columns: 1fr; }
+    .cfg-result-actions,
     .px-header, .cfg-bar, .cfg-progress, .cfg-rail-cta, .cfg-rail-actions,
     .cfg-suggest, .cfg-step-btn, .px-footer { display: none !important; }
     .cfg-layout { grid-template-columns: 1fr; }

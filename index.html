@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="booking-calender.css">
     <link rel="stylesheet" href="booking-response.css">
     <link rel="stylesheet" href="premium.css?v=booking-53785ec5">
-    <link rel="stylesheet" href="konfigurator.css?v=sticky-rail-1">
+    <link rel="stylesheet" href="konfigurator.css?v=validierung-1">
     <meta name="description"
         content="Professionelle Polster- und Matratzenreinigung in Österreich. Sofa, Sessel und Matratzen direkt bei Ihnen reinigen lassen. Standort wählen und Gesamtpreis berechnen.">
     <link rel="canonical" href="https://ecocleanpolsterreinigung.at/">
@@ -709,8 +709,6 @@
                                             <input class="cfg-input" id="contactEmailConfirm" type="email"
                                                 autocomplete="email">
                                         </label>
-                                        <p class="cfg-error" id="emailConfirmError" style="display: none;">Die beiden
-                                            E-Mail-Adressen stimmen nicht überein.</p>
                                         <label class="cfg-field">
                                             <span>Telefonnummer</span>
                                             <input class="cfg-input" id="contactPhone" type="tel" autocomplete="tel">
@@ -720,6 +718,7 @@
                                             <textarea class="cfg-textarea" id="contactMessage"
                                                 placeholder="Zum Beispiel: Stockwerk ohne Lift, Parkmöglichkeit, besondere Flecken …"></textarea>
                                         </label>
+                                        <div class="cfg-alert is-warning" id="cfgFormError" role="alert" hidden></div>
                                     </section>
                                 </div>
 
@@ -996,7 +995,7 @@
     </dialog>
     <script src="booking-calendar.js?v=copy-20260908" defer></script>
     <script src="booking-catalog.js?v=konfigurator-2026-09" defer></script>
-    <script src="premium-booking.js?v=konfigurator-2026-09" defer></script>
+    <script src="premium-booking.js?v=validierung-1" defer></script>
     <script src="premium.js?v=copy-20260908" defer></script>
 </body>
 

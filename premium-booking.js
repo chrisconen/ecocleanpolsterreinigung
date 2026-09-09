@@ -689,6 +689,9 @@ function animateTotal(target) {
 }
 
 function renderRail(quote) {
+    // Steht in der Leiste gerade ein Ergebnis oder eine Störung, bleibt sie
+    // stehen — sonst würde eine Mengenänderung die Bestätigung überschreiben.
+    if (!$('cfgTotal')) return;
     const empty = quote.itemCount === 0;
     animateTotal(empty ? 0 : quote.finalTotal);
     $('cfgTotalNote').textContent = empty
@@ -1011,116 +1014,168 @@ function toggleMobileBadges() {
 // ═══════════════════════════════════════════════════════════
 // SUBMIT FORM WITH N8N WEBHOOK INTEGRATION
 // ═══════════════════════════════════════════════════════════
-function submitForm() {
-    // Get contact field values
-    const name = document.getElementById('contactName').value.trim();
-    const email = document.getElementById('contactEmail').value.trim();
-    const phone = document.getElementById('contactPhone').value.trim();
-    const message = document.getElementById('contactMessage').value.trim();
+// ═══════════════════════════════════════════════════════════
+// PRÜFUNG DER EINGABEN
+// Jeder Fehler wird dort angezeigt, wo er entstanden ist, und
+// zusätzlich über dem Buchen-Knopf zusammengefasst. Kein alert():
+// das reisst den Kunden aus dem Formular und sagt ihm nicht,
+// welches Feld gemeint ist.
+// ═══════════════════════════════════════════════════════════
+const FIELD_ORDER = ['location', 'street', 'plz', 'city', 'contactName', 'contactEmail',
+    'contactEmailConfirm', 'contactPhone'];
 
-    // Validate required fields
-    let hasError = false;
+function fieldNote(id) {
+    const field = document.getElementById(id);
+    const holder = field?.closest('.cfg-field') || field?.parentElement;
+    return { field, holder };
+}
 
-    document.querySelectorAll('.config-input, .config-textarea').forEach(el => {
-        el.classList.remove('error');
-    });
-
-    if (!name) {
-        document.getElementById('contactName').classList.add('error');
-        hasError = true;
-    }
-
-    if (!email || !isValidEmail(email)) {
-        document.getElementById('contactEmail').classList.add('error');
-        hasError = true;
-    }
-
-    if (!phone) {
-        document.getElementById('contactPhone').classList.add('error');
-        hasError = true;
-    }
-
-    // Validate email confirmation
-    const emailConfirm = document.getElementById('contactEmailConfirm');
-    if (emailConfirm) {
-        const confirmEmail = emailConfirm.value.trim();
-
-        if (!confirmEmail) {
-            emailConfirm.classList.add('error');
-            hasError = true;
-        } else if (email !== confirmEmail) {
-            emailConfirm.classList.add('error');
-            alert('Bitte prüfen Sie Ihre Eingabe: Die E-Mail-Adressen stimmen nicht überein.');
-            return;
-        }
-    }
-
-    // Validate address fields (Step 6)
-    if (state.location) {
-        const streetInput = document.getElementById('street');
-        const plzInput = document.getElementById('plz');
-        const cityInput = document.getElementById('city');
-
-        if (!streetInput?.value.trim()) {
-            streetInput?.classList.add('error');
-            hasError = true;
-        }
-        if (!plzInput?.value.trim()) {
-            plzInput?.classList.add('error');
-            hasError = true;
-        }
-        if (!cityInput?.value.trim()) {
-            cityInput?.classList.add('error');
-            hasError = true;
-        }
-    }
-
-    if (hasError) {
+function setFieldError(id, message) {
+    const { field, holder } = fieldNote(id);
+    if (!field || !holder) return;
+    let note = holder.querySelector('.cfg-field-error');
+    if (!message) {
+        field.removeAttribute('aria-invalid');
+        field.removeAttribute('aria-describedby');
+        note?.remove();
         return;
     }
+    if (!note) {
+        note = document.createElement('p');
+        note.className = 'cfg-field-error';
+        note.id = `${id}-error`;
+        holder.append(note);
+    }
+    note.textContent = message;
+    field.setAttribute('aria-invalid', 'true');
+    field.setAttribute('aria-describedby', note.id);
+}
 
-    // 🆕 SLOT VALIDÁCIÓ (v3.1)
-    if (typeof BookingCalendar !== 'undefined') {
-        if (!BookingCalendar.isValid()) {
-            const errorMsg = BookingCalendar.getValidationMessage();
-            alert(errorMsg || 'Bitte wählen Sie einen Termin aus.');
-            return;
-        }
+function clearProblems() {
+    FIELD_ORDER.forEach(id => setFieldError(id, ''));
+    const box = document.getElementById('cfgFormError');
+    if (box) { box.hidden = true; box.replaceChildren(); }
+}
+
+// Alles, was einer Buchung im Weg steht — in der Reihenfolge des Formulars,
+// damit der Kunde oben anfängt und nicht hin- und herspringt.
+function collectProblems() {
+    const problems = [];
+    const value = id => document.getElementById(id)?.value.trim() || '';
+    const add = (message, field, step) => problems.push({ message, field, step });
+
+    if (calculateBooking().itemCount === 0)
+        add('Wählen Sie mindestens ein Möbelstück aus.', null, 'cfgStep3');
+
+    if (!state.location) add('Wählen Sie Ihre Stadt oder Region aus.', 'location', 'cfgStep5');
+    else {
+        if (!value('street')) add('Bitte geben Sie Straße und Hausnummer an.', 'street', 'cfgStep5');
+        if (!/^\d{4}$/.test(value('plz'))) add('Die PLZ besteht aus vier Ziffern.', 'plz', 'cfgStep5');
+        if (!value('city')) add('Bitte geben Sie den Ort an.', 'city', 'cfgStep5');
     }
 
-    // 🆕 v2.2 ROOT-CAUSE FIX: Termin-Auswahl VERBINDLICH direkt aus dem Kalender lesen.
-    // Der Kalender ist die alleinige Wahrheit — der lokale state.* kann veraltet oder
-    // leer sein (setCity() setzt die Kalenderauswahl zurück, ohne den lokalen State zu
-    // leeren; das dateSelected-Event feuert nur bei Slot-Bestätigung). Ohne diese
-    // Absicherung ging preferredDate/slotStartTime als null raus → Server-Default
-    // (fälschlich 20.07. / 09:00 statt der gewählten Zeit).
+    // Ohne bestätigten Termin gibt es keine Buchung — der Kalender ist Pflicht.
+    if (!state.selectedDate || !state.selectedSlot?.startTime)
+        add('Wählen Sie im Kalender einen Tag und eine Uhrzeit und übernehmen Sie den Termin.', null, 'cfgStep6');
+    else if (getZoneRule(C.LOCATIONS[state.location]?.zone).restrictHours
+        && !RESTRICTED_START_TIMES.includes(state.selectedSlot.startTime))
+        add(`In dieser Region beginnen wir um ${RESTRICTED_START_TIMES.join(' oder ')} Uhr. Bitte wählen Sie eine dieser Zeiten.`,
+            null, 'cfgStep6');
+
+    if (!value('contactName')) add('Bitte geben Sie Ihren Namen an.', 'contactName', 'cfgStep6');
+    const email = value('contactEmail');
+    if (!email) add('Ohne E-Mail-Adresse können wir Ihnen die Bestätigung nicht schicken.', 'contactEmail', 'cfgStep6');
+    else if (!isValidEmail(email)) add('Diese E-Mail-Adresse sieht nicht vollständig aus.', 'contactEmail', 'cfgStep6');
+    const confirm = value('contactEmailConfirm');
+    if (!confirm) add('Bitte wiederholen Sie Ihre E-Mail-Adresse.', 'contactEmailConfirm', 'cfgStep6');
+    else if (confirm !== email) add('Die beiden E-Mail-Adressen stimmen nicht überein.', 'contactEmailConfirm', 'cfgStep6');
+    // Zahlen zählen, nicht Zeichen: +43 660 123 45 67 ist genauso gültig wie 06601234567.
+    if ((value('contactPhone').match(/\d/g) || []).length < 7)
+        add('Bitte geben Sie eine erreichbare Telefonnummer an.', 'contactPhone', 'cfgStep6');
+
+    return problems;
+}
+
+function showProblems(problems) {
+    clearProblems();
+    problems.forEach(problem => { if (problem.field) setFieldError(problem.field, problem.message); });
+
+    const box = document.getElementById('cfgFormError');
+    if (box) {
+        box.replaceChildren();
+        const title = document.createElement('strong');
+        title.textContent = problems.length === 1
+            ? 'Es fehlt noch eine Angabe:'
+            : `Es fehlen noch ${problems.length} Angaben:`;
+        const list = document.createElement('ul');
+        problems.forEach(problem => {
+            const entry = document.createElement('li');
+            const jump = document.createElement('button');
+            jump.type = 'button';
+            jump.textContent = problem.message;
+            jump.addEventListener('click', () => focusProblem(problem));
+            entry.append(jump);
+            list.append(entry);
+        });
+        box.append(title, list);
+        box.hidden = false;
+    }
+    focusProblem(problems[0]);
+}
+
+function focusProblem(problem) {
+    if (!problem) return;
+    const field = problem.field && document.getElementById(problem.field);
+    const target = field || document.getElementById(problem.step);
+    target?.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        block: field ? 'center' : 'start'
+    });
+    if (field) setTimeout(() => field.focus({ preventScroll: true }), 300);
+}
+
+// Sobald der Kunde ein bemängeltes Feld korrigiert, verschwindet die Meldung.
+function wireLiveValidation() {
+    FIELD_ORDER.forEach(id => {
+        const field = document.getElementById(id);
+        const clear = () => { if (field.getAttribute('aria-invalid') === 'true') setFieldError(id, ''); };
+        // `change` deckt die Auswahlliste ab, `input` die Textfelder.
+        field?.addEventListener('input', clear);
+        field?.addEventListener('change', clear);
+    });
+    // Die Wiederholung prüft gegen die erste Adresse, sobald beide gefüllt sind.
+    const email = document.getElementById('contactEmail');
+    const confirm = document.getElementById('contactEmailConfirm');
+    const compare = () => {
+        if (!confirm.value.trim() || !email.value.trim()) return;
+        setFieldError('contactEmailConfirm',
+            confirm.value.trim() === email.value.trim() ? '' : 'Die beiden E-Mail-Adressen stimmen nicht überein.');
+    };
+    confirm?.addEventListener('blur', compare);
+    email?.addEventListener('blur', compare);
+}
+
+function submitForm() {
+    const name = document.getElementById('contactName').value.trim();
+    const email = document.getElementById('contactEmail').value.trim();
+    const message = document.getElementById('contactMessage').value.trim();
+
+    // Der Kalender ist die alleinige Wahrheit für den Termin — vor der Prüfung
+    // von dort lesen, damit ein bestätigter Slot nicht als "fehlt" gemeldet wird.
     if (typeof BookingCalendar !== 'undefined') {
         state.selectedDate = BookingCalendar.getSelectedDate();
         state.selectedSlot = BookingCalendar.getSelectedSlot();
     }
-    // Harte Absicherung: ohne Datum UND Uhrzeit KEINE Buchung senden.
-    if (!state.selectedDate || !state.selectedSlot || !state.selectedSlot.startTime) {
-        alert('Bitte wählen Sie zuerst Datum und Uhrzeit im Kalender und übernehmen Sie den Termin.');
+
+    const problems = collectProblems();
+    if (problems.length) {
+        showProblems(problems);
         return;
     }
+    clearProblems();
+    const phone = document.getElementById('contactPhone').value.trim();
 
-    // 🆕 ZEIT-VALIDIERUNG (v2.1): außerhalb Burgenland nur 11:00 / 13:00 Uhr
-    const _locRule = (state.location && DYNAMIC_CONTENT.locations[state.location])
-        ? getZoneRule(DYNAMIC_CONTENT.locations[state.location].zone)
-        : { restrictHours: false };
-    const _slotStart = state.selectedSlot?.startTime;
-    if (_locRule.restrictHours && _slotStart && !RESTRICTED_START_TIMES.includes(_slotStart)) {
-        alert('In dieser Region sind Termine nur um 11:00 oder 13:00 Uhr möglich. Bitte wählen Sie eine dieser Uhrzeiten im Kalender.');
-        return;
-    }
-
-    // Check if any products selected
     const quote = calculateBooking();
-    const hasProducts = quote.itemCount > 0;
-    if (!hasProducts) {
-        alert('Bitte wählen Sie mindestens ein Möbelstück aus.');
-        return;
-    }
 
     // ═══════════════════════════════════════════════════════════
     // BUILD SERVICES ARRAY FOR N8N
@@ -1294,121 +1349,209 @@ function submitForm() {
 // SUCCESS & ERROR HANDLERS
 // ═══════════════════════════════════════════════════════════
 
-function showBookingSuccess(data, payload) {
-    const summary = document.getElementById('configSummary');
-
-    // 🆕 HASZNÁLD A STATE-ET!
-    const slotStartTime = data.slot?.startTime || payload.booking.slotStartTime;
-    const duration = data.duration || payload.totals.estimatedDuration;
-
-    const [startH, startM] = slotStartTime.split(':').map(Number);
-    const endMinutes = startH * 60 + startM + duration;
-    const endH = Math.floor(endMinutes / 60);
-    const endM = endMinutes % 60;
-    const slotEndTime = data.slot?.endTime || `${endH.toString().padStart(2, '0')}:${endM.toString().padStart(2, '0')}`;
-
-    const slotInfo = `
-        <div class="booking-slot-info">
-            <p><strong>📅 Termin:</strong> ${escapeBookingHtml(data.slot?.date || payload.booking.preferredDate)}</p>
-            <p><strong>🕐 Zeit:</strong> ${escapeBookingHtml(slotStartTime)} - ${escapeBookingHtml(slotEndTime)}</p>
-        </div>
-    `;
-
-    summary.innerHTML = `
-        <div class="config-success">
-            <div class="config-success-icon">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h4 class="config-success-title">Termin erfolgreich gebucht!</h4>
-            <p class="config-success-text">Vielen Dank, ${escapeBookingHtml(payload.customer.name)}!</p>
-            ${slotInfo}
-            <p class="config-success-text">Bei Fragen kontaktieren Sie uns gerne unter <a href="mailto:info@ecocleanpolsterreinigung.at">info@ecocleanpolsterreinigung.at
-            </a>.</p>
-        </div>
-    `;
-}
-
-function showZoneMismatchError(data) {
-    const summary = document.getElementById('configSummary');
-    summary.innerHTML = `
-        <div class="config-error">
-            <div class="config-error-icon">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <h4 class="config-error-title">Terminkonflikt</h4>
-            <p class="config-error-text">${data.message || 'An diesem Tag sind wir bereits in einer anderen Region im Einsatz. Bitte wählen Sie einen anderen Tag.'}</p>
-            <button class="config-retry-btn" onclick="location.reload()">
-                Anderen Tag wählen
-            </button>
-        </div>
-    `;
-}
-
-function showDayFullError(data) {
-    const summary = document.getElementById('configSummary');
-    summary.innerHTML = `
-        <div class="config-error">
-            <div class="config-error-icon">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <h4 class="config-error-title">Tag ausgebucht</h4>
-            <p class="config-error-text">${data.message || 'An diesem Tag sind leider keine Termine mehr frei.'}</p>
-            ${data.suggestion ? `<p class="config-suggestion">${data.suggestion.message}</p>` : ''}
-            <button class="config-retry-btn" onclick="location.reload()">
-                Neuen Termin anfragen
-            </button>
-        </div>
-    `;
-}
-
-function showBookingError(data) {
-    const summary = document.getElementById('configSummary');
-    summary.innerHTML = `
-        <div class="config-error">
-            <div class="config-error-icon">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            </div>
-            <h4 class="config-error-title">Buchung nicht abgeschlossen</h4>
-            <p class="config-error-text">${escapeBookingHtml(data.message || 'Bitte versuchen Sie es später erneut oder rufen Sie uns an.')}</p>
-            <a href="tel:+4366499754216" class="config-phone-btn">
-                📞 0664 9975 4216
-            </a>
-        </div>
-    `;
-}
-
+// ═══════════════════════════════════════════════════════════
+// RÜCKMELDUNGEN
+// Ergebnis und Fehler erscheinen dort, wo der Kunde gerade
+// hinschaut: in der Preisleiste, an der Stelle der Zusammen-
+// fassung. Ein Fehler nimmt ihm die Auswahl nicht weg.
+// ═══════════════════════════════════════════════════════════
 function escapeBookingHtml(value) {
     return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 
+const RESULT_ICONS = {
+    success: '<polyline points="20 6 9 17 4 12"/>',
+    warning: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="7" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'
+};
+
+// kind: 'success' | 'warning'. `rows` sind Beschriftung/Wert-Paare,
+// `actions` die Knöpfe darunter.
+function showRailPanel(kind, { title, text, rows = [], note, actions = [] }) {
+    const rail = document.getElementById('configSummary');
+    if (!rail) return;
+    rail.classList.add('cfg-rail-result');
+    rail.replaceChildren();
+
+    const panel = document.createElement('div');
+    panel.className = `cfg-result is-${kind}`;
+    panel.setAttribute('role', kind === 'success' ? 'status' : 'alert');
+
+    const icon = document.createElement('span');
+    icon.className = 'cfg-result-icon';
+    icon.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${RESULT_ICONS[kind]}</svg>`;
+
+    const heading = document.createElement('h3');
+    heading.textContent = title;
+    const body = document.createElement('p');
+    body.textContent = text;
+    panel.append(icon, heading, body);
+
+    if (rows.length) {
+        const list = document.createElement('dl');
+        list.className = 'cfg-result-rows';
+        rows.forEach(([label, value]) => {
+            const term = document.createElement('dt');
+            term.textContent = label;
+            const detail = document.createElement('dd');
+            detail.textContent = value;
+            list.append(term, detail);
+        });
+        panel.append(list);
+    }
+    if (note) {
+        const small = document.createElement('p');
+        small.className = 'cfg-result-note';
+        small.textContent = note;
+        panel.append(small);
+    }
+    if (actions.length) {
+        const bar = document.createElement('div');
+        bar.className = 'cfg-result-actions';
+        actions.forEach(action => {
+            const element = document.createElement(action.href ? 'a' : 'button');
+            if (action.href) element.href = action.href;
+            else element.type = 'button';
+            element.className = action.primary ? 'cfg-result-cta' : 'cfg-result-link';
+            element.textContent = action.label;
+            if (action.run) element.addEventListener('click', action.run);
+            bar.append(element);
+        });
+        panel.append(bar);
+    }
+    rail.append(panel);
+    // Die mobile Preisleiste passt nicht mehr zum Ergebnis.
+    document.querySelector('.cfg-bar')?.setAttribute('hidden', '');
+    rail.scrollIntoView({
+        behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+        block: 'center'
+    });
+}
+
+const formatBookingDate = value => {
+    const date = new Date(`${value}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? String(value)
+        : date.toLocaleDateString('de-AT', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+function showBookingSuccess(data, payload) {
+    const start = data.slot?.startTime || payload.booking.slotStartTime;
+    const duration = data.duration || payload.totals.estimatedDuration;
+    const [hour, minute] = String(start).split(':').map(Number);
+    const endMinutes = hour * 60 + minute + duration;
+    const end = data.slot?.endTime
+        || `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+
+    lockConfigurator(true);
+    showRailPanel('success', {
+        title: 'Termin gebucht',
+        text: `Danke, ${payload.customer.name}. Ihr Termin steht fest — die Bestätigung geht an ${payload.customer.email}.`,
+        rows: [
+            ['Termin', formatBookingDate(data.slot?.date || payload.booking.preferredDate)],
+            ['Uhrzeit', `${start} – ${end} Uhr`],
+            ['Adresse', payload.location],
+            ['Gesamtpreis', `${payload.totals.estimatedPrice} € inkl. Anfahrt`]
+        ],
+        note: 'Sie müssen nichts vorbereiten. Sorgen Sie nur dafür, dass die Möbelstücke frei zugänglich sind — den Rest bringen wir mit.',
+        actions: [
+            { label: 'Termin als PDF speichern', primary: true, run: () => window.print() },
+            { label: 'Frage zum Termin? 0664 9975 4216', href: 'tel:+4366499754216' }
+        ]
+    });
+}
+
+function showZoneMismatchError(data) {
+    showRailPanel('warning', {
+        title: 'Dieser Tag geht sich nicht aus',
+        text: data.message || 'An diesem Tag sind wir bereits in einer anderen Region unterwegs. Bitte wählen Sie einen anderen Tag im Kalender.',
+        note: 'Es wurde nichts gebucht und nichts berechnet. Ihre Zusammenstellung bleibt erhalten.',
+        actions: [{ label: 'Anderen Tag wählen', primary: true, run: retryBooking }]
+    });
+}
+
+function showDayFullError(data) {
+    showRailPanel('warning', {
+        title: 'Dieser Tag ist ausgebucht',
+        text: data.message || 'An diesem Tag ist leider kein Termin mehr frei.',
+        note: data.suggestion?.message || 'Es wurde nichts gebucht. Ihre Zusammenstellung bleibt erhalten.',
+        actions: [{ label: 'Anderen Tag wählen', primary: true, run: retryBooking }]
+    });
+}
+
+function showBookingError(data) {
+    showRailPanel('warning', {
+        title: 'Die Buchung ist nicht durchgegangen',
+        text: data.message || 'Wir konnten den Termin gerade nicht abschließen. Bitte versuchen Sie es noch einmal oder rufen Sie uns an.',
+        note: 'Es wurde nichts gebucht und nichts berechnet. Ihre Zusammenstellung bleibt erhalten.',
+        actions: [
+            { label: 'Erneut versuchen', primary: true, run: retryBooking },
+            { label: 'Anrufen: 0664 9975 4216', href: 'tel:+4366499754216' }
+        ]
+    });
+}
+
+function showSuccessMessage() {
+    showRailPanel('success', {
+        title: 'Anfrage ist bei uns',
+        text: 'Der Terminkalender war gerade nicht erreichbar, Ihre Anfrage haben wir aber vollständig erhalten. Wir bestätigen den Termin innerhalb von 24 Stunden per E-Mail.',
+        note: 'Bitte warten Sie unsere Rückmeldung ab, bevor Sie erneut buchen.',
+        actions: [{ label: 'Anrufen: 0664 9975 4216', href: 'tel:+4366499754216' }]
+    });
+}
+
+// Nach einer bestätigten Buchung darf niemand mehr an der Auswahl drehen —
+// sonst zeigt das Formular etwas anderes an, als tatsächlich gebucht wurde.
+function lockConfigurator(locked) {
+    const body = document.querySelector('.config-body');
+    if (!body) return;
+    body.classList.toggle('is-locked', locked);
+    body.querySelectorAll('.cfg-main input, .cfg-main select, .cfg-main textarea, .cfg-main button')
+        .forEach(element => { element.disabled = locked; });
+}
+
+// Zurück zum Formular, ohne die Zusammenstellung zu verlieren.
+function retryBooking() {
+    const rail = document.getElementById('configSummary');
+    lockConfigurator(false);
+    rail.classList.remove('cfg-rail-result');
+    rail.replaceChildren(...RAIL_TEMPLATE.cloneNode(true).childNodes);
+    document.querySelector('.cfg-bar')?.removeAttribute('hidden');
+    wireRail();
+    renderAll();
+    document.getElementById('cfgStep6')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 function showQuoteChangedError(data) {
-    // Keep the current selections visible; a new quote requires a fresh review.
+    // Preis oder Dauer haben sich geändert: Auswahl stehen lassen und den
+    // neuen Betrag zeigen, bevor irgendetwas gebucht wird.
     document.getElementById('bookingQuoteError')?.remove();
     const notice = document.createElement('div');
     notice.id = 'bookingQuoteError';
-    notice.className = 'config-error';
+    notice.className = 'cfg-alert is-warning';
     notice.setAttribute('role', 'alert');
+    const title = document.createElement('strong');
+    title.textContent = 'Der Preis hat sich geändert';
     const message = document.createElement('p');
-    message.textContent = data.message || 'Bitte laden Sie das Formular neu und prüfen Sie den aktualisierten Preis, bevor Sie buchen.';
-    notice.appendChild(message);
+    message.textContent = data.message
+        || 'Bitte prüfen Sie den aktualisierten Preis, bevor Sie buchen. Es wurde kein Termin gebucht.';
+    notice.append(title, message);
     const pricing = data.details?.pricing;
     if (pricing && Number.isFinite(pricing.finalPrice)) {
         const amount = document.createElement('p');
-        amount.textContent = `Aktueller Gesamtpreis: ${pricing.finalPrice.toLocaleString('de-AT')} € inkl. Anfahrt. Es wurde kein Termin gebucht.`;
-        notice.appendChild(amount);
+        amount.textContent = `Aktueller Gesamtpreis: ${pricing.finalPrice.toLocaleString('de-AT')} € inkl. Anfahrt.`;
+        notice.append(amount);
     }
     const retry = document.createElement('button');
     retry.type = 'button';
-    retry.className = 'config-retry-btn';
+    retry.className = 'cfg-result-cta';
     retry.textContent = 'Aktuelles Angebot laden';
-    retry.onclick = () => window.location.reload();
-    notice.appendChild(retry);
-    document.querySelector('.config-contact').prepend(notice);
+    retry.addEventListener('click', () => window.location.reload());
+    notice.append(retry);
+    (document.querySelector('.cfg-rail-body') || document.getElementById('cfgStep6'))?.prepend(notice);
+    notice.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-// ═══════════════════════════════════════════════════════════
-// FALLBACK TO FORMSUBMIT IF N8N FAILS
-// ═══════════════════════════════════════════════════════════
+
 function fallbackToFormSubmit(payload) {
     console.log('⚠️ Falling back to FormSubmit...');
 
@@ -1451,19 +1594,6 @@ function fallbackToFormSubmit(payload) {
         });
 }
 
-function showSuccessMessage() {
-    const summary = document.getElementById('configSummary');
-    summary.innerHTML = `
-        <div class="config-success">
-            <div class="config-success-icon">
-                <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-            </div>
-            <h4 class="config-success-title">Anfrage erfolgreich gesendet!</h4>
-            <p class="config-success-text">Vielen Dank! Wir prüfen den Buchungsstatus und melden uns innerhalb von 24 Stunden bei Ihnen. Bitte warten Sie unsere Rückmeldung ab, bevor Sie erneut buchen.</p>
-        </div>
-    `;
-}
-
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
@@ -1500,6 +1630,13 @@ function renderAppointment(detail) {
         : `${date}, ca. ${time} Uhr (±30 Min.)`;
 }
 
+let RAIL_TEMPLATE = null;
+
+function wireRail() {
+    document.getElementById('cfgReset')?.addEventListener('click', resetConfigurator);
+    document.getElementById('cfgPrint')?.addEventListener('click', () => window.print());
+}
+
 function init() {
     if (!document.getElementById('cfgProducts')) return;   // Seite ohne Konfigurator
     // Der Rechner steht offen da — Kopfzeile und Panel brauchen keinen Klick.
@@ -1520,8 +1657,11 @@ function init() {
         document.getElementById('location').value = state.location;
         handleLocationChange(document.getElementById('location'));
     }
-    document.getElementById('cfgReset')?.addEventListener('click', resetConfigurator);
-    document.getElementById('cfgPrint')?.addEventListener('click', () => window.print());
+    // Kopie der leeren Preisleiste: nach einer Fehlermeldung wird sie daraus
+    // wiederhergestellt, damit die Zusammenstellung nicht verloren geht.
+    RAIL_TEMPLATE = document.getElementById('configSummary').cloneNode(true);
+    wireRail();
+    wireLiveValidation();
     document.getElementById('cfgBarCta')?.addEventListener('click', () =>
         document.getElementById('cfgStep6').scrollIntoView({ behavior: 'smooth', block: 'start' }));
     renderAll();
@@ -1591,56 +1731,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // ═══════════════════════════════════════════════════════════
-    // EMAIL CONFIRMATION VALIDATION (Real-time)
-    // ═══════════════════════════════════════════════════════════
-    const emailInput = document.getElementById('contactEmail');
-    const emailConfirm = document.getElementById('contactEmailConfirm');
-    const emailConfirmError = document.getElementById('emailConfirmError');
-
-    if (emailInput && emailConfirm && emailConfirmError) {
-        // Validate on email confirmation input
-        emailConfirm.addEventListener('input', function () {
-            const email = emailInput.value.trim();
-            const confirmEmail = emailConfirm.value.trim();
-
-            // Only validate if confirmation field has content
-            if (confirmEmail.length > 0) {
-                if (email !== confirmEmail) {
-                    // Mismatch - show error
-                    emailConfirm.classList.remove('success');
-                    emailConfirm.classList.add('error');
-                    emailConfirmError.style.display = 'block';
-                } else {
-                    // Match - show success
-                    emailConfirm.classList.remove('error');
-                    emailConfirm.classList.add('success');
-                    emailConfirmError.style.display = 'none';
-                }
-            } else {
-                // Empty - reset
-                emailConfirm.classList.remove('error', 'success');
-                emailConfirmError.style.display = 'none';
-            }
-        });
-
-        // Also validate when original email changes
-        emailInput.addEventListener('input', function () {
-            const email = emailInput.value.trim();
-            const confirmEmail = emailConfirm.value.trim();
-
-            // Only validate if confirmation field has content
-            if (confirmEmail.length > 0) {
-                if (email !== confirmEmail) {
-                    emailConfirm.classList.remove('success');
-                    emailConfirm.classList.add('error');
-                    emailConfirmError.style.display = 'block';
-                } else {
-                    emailConfirm.classList.remove('error');
-                    emailConfirm.classList.add('success');
-                    emailConfirmError.style.display = 'none';
-                }
-            }
-        });
-    }
+    // Feldprüfung: siehe wireLiveValidation(), dort mit sichtbaren Meldungen.
 });
