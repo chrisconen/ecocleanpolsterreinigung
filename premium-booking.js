@@ -47,643 +47,791 @@ const N8N_CONFIG = {
     // Default zone for this website
     defaultZone: 'B'
 };
-
 // ═══════════════════════════════════════════════════════════
-// ZONE RULES v2.1 — MINDESTBESTELLWERT + BUCHBARE ZEITEN
-// Ausgangspunkt (Basis): Ungarn 9134 (Bodonhely, Region Győr)
-//   - Burgenland (B):                  kein Mindestwert, freie Zeiten
-//   - Angrenzende Bundesländer (W/NÖ/ST): 199 € Mindest, nur 11:00 / 13:00
-//   - Weiter entfernt (OÖ/SB/K/T/V):     299 € Mindest, nur 11:00 / 13:00
-// Diese Regeln müssen mit dem n8n "The Brain" Node übereinstimmen.
+// KONFIGURATOR — Produkte, Extras und Preise kommen aus
+// booking-catalog.js. Diese Datei enthält keine Tarifzahlen.
+// Der Katalog ist zugleich die Vorlage für den n8n-Mirror.
 // ═══════════════════════════════════════════════════════════
-const RESTRICTED_START_TIMES = ['11:00', '13:00'];
-const ZONE_RULES = {
-    'B':  { minOrder: 0,   restrictHours: false },  // Burgenland (Heimatregion)
-    'W':  { minOrder: 199, restrictHours: true  },  // Wien
-    'NÖ': { minOrder: 199, restrictHours: true  },  // Niederösterreich
-    'ST': { minOrder: 199, restrictHours: true  },  // Steiermark
-    'OÖ': { minOrder: 299, restrictHours: true  },  // Oberösterreich
-    'SB': { minOrder: 299, restrictHours: true  },  // Salzburg
-    'K':  { minOrder: 299, restrictHours: true  },  // Kärnten
-    'T':  { minOrder: 299, restrictHours: true  },  // Tirol
-    'V':  { minOrder: 299, restrictHours: true  }   // Vorarlberg
+const C = window.ECOBookingCatalog;
+const RESTRICTED_START_TIMES = C.RESTRICTED_START_TIMES;
+const getZoneRule = C.getZoneRule;
+const DYNAMIC_CONTENT = { locations: C.LOCATIONS, conditions: C.CONDITIONS };
+const STORAGE_KEY = 'eco-konfigurator-v2';
+const PILLOW_PRODUCT = 'Zierkissen (nicht waschmaschinengeeignet)';
+const PILLOW_HOSTS = ['L-Couch', 'U-Couch', 'Sofa', 'Ottomane / Récamiere'];
+const CUSTOMER_TYPES = {
+    'Privatkunde': { icon: '🏠', title: 'Für Ihr Zuhause', desc: 'Persönliche Betreuung für Ihr Zuhause' },
+    'Geschäftskunde': { icon: '🏢', title: 'Ihr Firmenrabatt', desc: '10% Rabatt auf Reinigung und Extras', badge: '-10%' }
 };
-function getZoneRule(zone) {
-    return ZONE_RULES[zone] || { minOrder: 0, restrictHours: false };
-}
 
-// ═══════════════════════════════════════════════════════════
-// CONFIGURATOR LOGIC
-// ═══════════════════════════════════════════════════════════
-const STEPS = [
-    { id: 1, label: "Sind Sie Privat- oder Geschäftskunde?", chips: ["Privatkunde", "Geschäftskunde"] },
-    { id: 2, label: "Was möchten Sie reinigen lassen?", chips: ["Polstermöbel", "Matratzen", "Beides"] },
-    {
-        id: 3, label: "Welche Möbel möchten Sie reinigen lassen?", numbers: [
-            { name: "L-Couch", price: 119, duration: 60, category: "polster" },
-            { name: "U-Couch", price: 159, duration: 90, category: "polster" },
-            { name: "Sofa", price: 85, duration: 45, category: "polster" },
-            { name: "Sessel", price: 35, duration: 15, category: "polster" },
-            { name: "Stuhl", price: 19, duration: 10, category: "polster" },
-            { name: "Kindermatratze (Trocken)", price: 29, duration: 20, category: "matratze" },
-            { name: "Kindermatratze (Nass)", price: 49, duration: 40, category: "matratze" },
-            { name: "Matratze Einzel (Trocken)", price: 39, duration: 30, category: "matratze" },
-            { name: "Matratze Einzel (Nass)", price: 69, duration: 45, category: "matratze" },
-            { name: "Matratze Doppel (Trocken)", price: 59, duration: 45, category: "matratze" },
-            { name: "Matratze Doppel (Nass)", price: 115, duration: 60, category: "matratze" }
-        ]
-    },
-    { id: 4, label: "Was sollten wir bei der Reinigung beachten?", chips: ["Haustiere", "Kleinkinder", "Allergiker"], multi: true },
-    { id: 5, label: "Wo soll die Reinigung stattfinden?", select: true }
-];
+const $ = id => document.getElementById(id);
+const euro = value => `${Math.round(value)} €`;
+const cents = value => value.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// Per-furniture extras. Prices in EUR and additional working time in minutes.
-// Keep this catalog as the single source for UI, totals and booking line items.
-const COUCH_ADDONS = [
-    { id: 'sleep', name: 'Ausziehbare Liegefläche mitreinigen', description: 'Wir reinigen auch die zusätzliche Liegefläche Ihrer Schlafcouch.', prices: { 'L-Couch': 30, 'U-Couch': 40, Sofa: 25 }, durations: { 'L-Couch': 20, 'U-Couch': 20, Sofa: 20 } },
-    { id: 'odor', name: 'Geruchsbehandlung bei Haustieren', description: 'Zusätzliche Behandlung von Hunde- und Katzengerüchen. Bei Urinflecken wählen Sie bitte die Intensivreinigung.', prices: { 'L-Couch': 25, 'U-Couch': 35, Sofa: 20, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
-    { id: 'protection', name: 'Imprägnierung zum Fleckschutz', description: 'Zusätzlicher Fleckschutz für geeignete Textilbezüge.', prices: { 'L-Couch': 35, 'U-Couch': 45, Sofa: 25, Sessel: 15, Stuhl: 7 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } },
-    { id: 'intensive', name: 'Intensivreinigung bei starken Verschmutzungen / Urin', description: 'Zusätzliche Reinigung stark verschmutzter Stellen, einschließlich Geruchsbehandlung.', prices: { 'L-Couch': 49, 'U-Couch': 59, Sofa: 39, Sessel: 19, Stuhl: 10 }, durations: { 'L-Couch': 30, 'U-Couch': 30, Sofa: 30, Sessel: 15, Stuhl: 10 } },
-    { id: 'hair', name: 'Festsitzende Tierhaare entfernen', description: 'Für Hunde- und Katzenhaare, die sich tief im Bezug festgesetzt haben.', prices: { 'L-Couch': 20, 'U-Couch': 30, Sofa: 15, Sessel: 10, Stuhl: 5 }, durations: { 'L-Couch': 15, 'U-Couch': 15, Sofa: 15, Sessel: 10, Stuhl: 5 } }
-];
-const hasCouchAddons = name => COUCH_ADDONS.some(addon => Object.hasOwn(addon.prices, name));
-
-const DYNAMIC_CONTENT = {
-    customerType: {
-        "Privatkunde": { discount: 0, title: "Für Ihr Zuhause", desc: "Persönliche Betreuung für Ihr Zuhause", icon: "🏠" },
-        "Geschäftskunde": { discount: 10, title: "Ihr Firmenrabatt", desc: "10% Rabatt auf Reinigung und Extras", icon: "🏢", badge: "-10%" }
-    },
-    serviceType: {
-        "Polstermöbel": { title: "Polsterreinigung", desc: "Gründliche Reinigung Ihrer Polstermöbel", icon: "🛋️", features: ["HEPA-Filter", "Bio-Mittel"] },
-        "Matratzen": { title: "Matratzenreinigung", desc: "UV-C-Behandlung und gründliche Reinigung", icon: "🛏️", features: ["UV-C", "Anti-Allergen"] },
-        "Beides": { title: "Kombinierte Reinigung", desc: "Polstermöbel und Matratzen in einem Termin", icon: "✨", badge: "EMPFOHLEN", features: ["Polster & Matratzen"] }
-    },
-    conditions: {
-        "Haustiere": { title: "Haustiere im Haushalt", desc: "Wählen Sie die gewünschten Extras direkt beim Möbelstück. Bei Matratzen beträgt der Aufpreis 10%.", icon: "🐾", surcharge: 0 },
-        "Kleinkinder": { title: "Kleinkinder im Haushalt", desc: "Wir berücksichtigen Ihren Hinweis bei der Reinigung", icon: "👶", badge: "BIO", surcharge: 0 },
-        "Allergiker": { title: "Zusatzbehandlung für Allergiker", desc: "Zusätzliche Behandlung zur Entfernung von Allergenen", icon: "🌿", badge: "+10%", surcharge: 10 }
-    },
-    // ═══════════════════════════════════════════════════════════
-    // ZONE B LOCATIONS (BURGENLAND / WESTERN BORDER)
-    // ═══════════════════════════════════════════════════════════
-    locations: {
-        // ── BURGENLAND ──────────────────────────────────────────
-        "eisenstadt": { name: "Eisenstadt", info: "Landeshauptstadt Burgenland", zone: "B", country: "AT", travelTime: 55 },
-        "oberwart": { name: "Oberwart", info: "Südburgenland", zone: "B", country: "AT", travelTime: 70 },
-        "neusiedl-am-see": { name: "Neusiedl am See", info: "Seewinkel", zone: "B", country: "AT", travelTime: 60 },
-        "neusiedl": { name: "Neusiedl am See", info: "Seewinkel", zone: "B", country: "AT", travelTime: 60 },
-        "mattersburg": { name: "Mattersburg", info: "Zentrales Burgenland", zone: "B", country: "AT", travelTime: 50 },
-        "guessing": { name: "Güssing", info: "Südburgenland", zone: "B", country: "AT", travelTime: 90 },
-        "jennersdorf": { name: "Jennersdorf", info: "Grenzregion", zone: "B", country: "AT", travelTime: 95 },
-        "kittsee": { name: "Kittsee", info: "Grenzregion Slowakei", zone: "B", country: "AT", travelTime: 65 },
-        "parndorf": { name: "Parndorf", info: "Designer Outlet Region", zone: "B", country: "AT", travelTime: 65 },
-        // ── WIEN ────────────────────────────────────────────────
-        "wien": { name: "Wien", info: "Bundeshauptstadt", zone: "W", country: "AT", travelTime: 75 },
-        // ── NIEDERÖSTERREICH ────────────────────────────────────
-        "wiener-neustadt": { name: "Wiener Neustadt", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 60 },
-        "st-poelten": { name: "St. Pölten", info: "Landeshauptstadt NÖ", zone: "NÖ", country: "AT", travelTime: 90 },
-        "baden": { name: "Baden", aliases: ["Baden bei Wien"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 70 },
-        "krems": { name: "Krems", aliases: ["Krems an der Donau"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 110 },
-        "moedling": { name: "Mödling", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 75 },
-        "klosterneuburg": { name: "Klosterneuburg", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 80 },
-        "amstetten": { name: "Amstetten", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 150 },
-        "schwechat": { name: "Schwechat", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 70 },
-        "tulln": { name: "Tulln", aliases: ["Tulln an der Donau"], info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 95 },
-        "stockerau": { name: "Stockerau", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 90 },
-        "korneuburg": { name: "Korneuburg", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 85 },
-        "neunkirchen": { name: "Neunkirchen", info: "Niederösterreich", zone: "NÖ", country: "AT", travelTime: 65 },
-        // ── STEIERMARK ──────────────────────────────────────────
-        "graz": { name: "Graz", info: "Landeshauptstadt Steiermark", zone: "ST", country: "AT", travelTime: 120 },
-        "leoben": { name: "Leoben", info: "Steiermark", zone: "ST", country: "AT", travelTime: 145 },
-        "kapfenberg": { name: "Kapfenberg", info: "Steiermark", zone: "ST", country: "AT", travelTime: 150 },
-        "bruck-an-der-mur": { name: "Bruck an der Mur", info: "Steiermark", zone: "ST", country: "AT", travelTime: 140 },
-        "leibnitz": { name: "Leibnitz", info: "Steiermark", zone: "ST", country: "AT", travelTime: 135 },
-        "weiz": { name: "Weiz", info: "Steiermark", zone: "ST", country: "AT", travelTime: 130 },
-        "feldbach": { name: "Feldbach", info: "Steiermark", zone: "ST", country: "AT", travelTime: 125 },
-        "judenburg": { name: "Judenburg", info: "Steiermark", zone: "ST", country: "AT", travelTime: 155 },
-        // ── OBERÖSTERREICH ──────────────────────────────────────
-        "linz": { name: "Linz", info: "Landeshauptstadt OÖ", zone: "OÖ", country: "AT", travelTime: 200 },
-        "wels": { name: "Wels", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 210 },
-        "steyr": { name: "Steyr", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 190 },
-        "leonding": { name: "Leonding", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 200 },
-        "traun": { name: "Traun", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 205 },
-        "gmunden": { name: "Gmunden", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 195 },
-        "braunau": { name: "Braunau", aliases: ["Braunau am Inn"], info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 240 },
-        "ried-im-innkreis": { name: "Ried im Innkreis", info: "Oberösterreich", zone: "OÖ", country: "AT", travelTime: 230 },
-        // ── SALZBURG ────────────────────────────────────────────
-        "salzburg": { name: "Salzburg", info: "Landeshauptstadt Salzburg", zone: "SB", country: "AT", travelTime: 260 },
-        "hallein": { name: "Hallein", info: "Salzburg", zone: "SB", country: "AT", travelTime: 265 },
-        "wals-siezenheim": { name: "Wals-Siezenheim", info: "Salzburg", zone: "SB", country: "AT", travelTime: 255 },
-        "saalfelden": { name: "Saalfelden", aliases: ["Saalfelden am Steinernen Meer"], info: "Salzburg", zone: "SB", country: "AT", travelTime: 290 },
-        // ── KÄRNTEN ─────────────────────────────────────────────
-        "klagenfurt": { name: "Klagenfurt", aliases: ["Klagenfurt am Wörthersee"], info: "Landeshauptstadt Kärnten", zone: "K", country: "AT", travelTime: 185 },
-        "villach": { name: "Villach", info: "Kärnten", zone: "K", country: "AT", travelTime: 200 },
-        "wolfsberg": { name: "Wolfsberg", info: "Kärnten", zone: "K", country: "AT", travelTime: 175 },
-        "spittal-an-der-drau": { name: "Spittal an der Drau", info: "Kärnten", zone: "K", country: "AT", travelTime: 215 },
-        // ── TIROL ───────────────────────────────────────────────
-        "innsbruck": { name: "Innsbruck", info: "Landeshauptstadt Tirol", zone: "T", country: "AT", travelTime: 310 },
-        "kufstein": { name: "Kufstein", info: "Tirol", zone: "T", country: "AT", travelTime: 280 },
-        "hall-in-tirol": { name: "Hall in Tirol", info: "Tirol", zone: "T", country: "AT", travelTime: 315 },
-        "woergl": { name: "Wörgl", info: "Tirol", zone: "T", country: "AT", travelTime: 290 },
-        "schwaz": { name: "Schwaz", info: "Tirol", zone: "T", country: "AT", travelTime: 320 },
-        "telfs": { name: "Telfs", info: "Tirol", zone: "T", country: "AT", travelTime: 310 },
-        // ── VORARLBERG ──────────────────────────────────────────
-        "bregenz": { name: "Bregenz", info: "Landeshauptstadt Vorarlberg", zone: "V", country: "AT", travelTime: 380 },
-        "dornbirn": { name: "Dornbirn", info: "Vorarlberg", zone: "V", country: "AT", travelTime: 375 },
-        "feldkirch": { name: "Feldkirch", info: "Vorarlberg", zone: "V", country: "AT", travelTime: 370 },
-        "lustenau": { name: "Lustenau", info: "Vorarlberg", zone: "V", country: "AT", travelTime: 378 },
-        // ── FALLBACK ────────────────────────────────────────────
-        "sonstige": { name: "Sonstige", info: "Individuelles Angebot per E-Mail", zone: "B", country: "AT", travelTime: 60 }
-    }
+// Ersatzgrafik, solange für ein Produkt noch kein Foto vorliegt.
+const ICONS = {
+    polster: '<path d="M8 24v-6a4 4 0 0 1 4-4h24a4 4 0 0 1 4 4v6"/><path d="M8 24a4 4 0 0 0-4 4v6h40v-6a4 4 0 0 0-4-4"/><path d="M12 24h24"/><path d="M8 34v4M40 34v4"/>',
+    matratze: '<path d="M6 16h36a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V18a2 2 0 0 1 2-2Z"/><path d="M14 22v4M24 22v4M34 22v4"/>',
+    teppich: '<path d="M9 15h30a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V17a2 2 0 0 1 2-2Z"/><path d="M13 33v4M19 33v4M25 33v4M31 33v4M37 33v4"/><path d="M13 11v4M19 11v4M25 11v4M31 11v4M37 11v4"/>',
+    auto: '<path d="M6 30h36"/><path d="M8 30v-5l4-8h20l7 8 3 1v4"/><circle cx="16" cy="33" r="3"/><circle cx="34" cy="33" r="3"/>'
 };
+const svg = key => `<svg viewBox="0 0 48 48" fill="none" stroke="currentColor" stroke-width="2"
+    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[key] || ICONS.polster}</svg>`;
 
 const state = {
-    customerType: null,
-    serviceType: null,
+    customerType: 'Privatkunde',
+    serviceType: null,      // abgeleitetes Label für die Buchungsdaten
+    categories: [],
     quantities: {},
     couchAddons: {},
     conditions: [],
     location: null,
     selectedDate: null,
-    selectedSlot: null  // 🆕 ÚJ v3.1
+    selectedSlot: null
 };
 let started = false;
 
-// ═══════════════════════════════════════════════════════════
-// CALENDAR DATE SELECTION HANDLER
-// ═══════════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded', () => {
-    const calendarContainer = document.getElementById('bookingCalendar');
-    if (calendarContainer) {
-        calendarContainer.addEventListener('dateSelected', (event) => {
-            // 🆕 TELJES SLOT ADATOK MENTÉSE (v3.1)
-            state.selectedDate = event.detail.date;
-            state.selectedSlot = event.detail.slot;  // 🆕 ÚJ!
+function saveState() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            customerType: state.customerType, categories: state.categories,
+            quantities: state.quantities, couchAddons: state.couchAddons,
+            conditions: state.conditions, location: state.location
+        }));
+    } catch { /* privater Modus */ }
+}
 
-            console.log('📅 Slot selected:', {
-                date: state.selectedDate,
-                slot: state.selectedSlot,
-                startTime: state.selectedSlot?.startTime,
-                isFirstSlot: event.detail.isFirstSlot,
-                flexibilityAccepted: event.detail.flexibilityAccepted
-            });
-
-            // 🆕 NE HÍVD AZ updateSummary()-t! Az újrarendereli a naptárat!
-            // updateSummary();  // ← TÖRÖLVE!
-
-            // Update timing display ONLY
-            const timingText = document.getElementById('timingText');
-            if (timingText && event.detail.date && event.detail.slot) {
-                const formattedDate = new Date(event.detail.date).toLocaleDateString('de-AT', {
-                    weekday: 'short',
-                    day: 'numeric',
-                    month: 'short'
-                });
-
-                // 🆕 HASZNÁLD A SLOT STARTTIME-OT!
-                const slotTime = event.detail.slot.startTime;
-                const timeInfo = event.detail.isFirstSlot
-                    ? ` um ${slotTime}`
-                    : ` ~${slotTime} (±30 Min)`;
-
-                timingText.innerHTML = `📅 ${formattedDate}${timeInfo}`;
-                document.getElementById('summaryTiming').style.display = 'flex';
-            }
-        });
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // 🆕 AUTO-START CONFIGURATOR FROM URL PARAMETER
-    // ═══════════════════════════════════════════════════════════
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('start') === 'true') {
-        // Small delay to ensure page is fully loaded
-        setTimeout(() => {
-            startAnimation();
-            // Remove parameter from URL without reload
-            window.history.replaceState({}, document.title, window.location.pathname);
-        }, 500);
-    }
-});
-
-function typeWriter(el, text, speed = 35) {
-    return new Promise(resolve => {
-        el.innerHTML = '';
-        let i = 0;
-        function type() {
-            if (i < text.length) {
-                const char = document.createElement('span');
-                char.className = 'typewriter-char';
-                char.textContent = text[i];
-                el.appendChild(char);
-                setTimeout(() => char.classList.add('visible'), 10);
-                i++;
-                setTimeout(type, speed);
-            } else { resolve(); }
-        }
-        type();
+// Gespeicherte Auswahl ist Alt-Bestand: nur übernehmen, was der Katalog heute
+// noch kennt, sonst tauchen längst entfernte Positionen im Preis wieder auf.
+function restoreState() {
+    let stored;
+    try { stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); } catch { return; }
+    if (!stored || typeof stored !== 'object') return;
+    state.customerType = stored.customerType === 'Geschäftskunde' ? 'Geschäftskunde' : 'Privatkunde';
+    state.categories = (stored.categories || []).filter(id => C.CATEGORIES.some(category => category.id === id));
+    state.conditions = (stored.conditions || []).filter(name => Object.hasOwn(C.CONDITIONS, name));
+    state.location = C.LOCATIONS[stored.location] ? stored.location : null;
+    C.PRODUCTS.forEach(product => {
+        const quantity = Math.max(0, Math.min(99, Math.trunc(Number(stored.quantities?.[product.name]) || 0)));
+        if (!quantity) return;
+        state.quantities[product.name] = quantity;
+        const units = Array.isArray(stored.couchAddons?.[product.name]) ? stored.couchAddons[product.name] : [];
+        state.couchAddons[product.name] = Array.from({ length: quantity }, (unused, index) =>
+            (units[index] || []).filter(id => C.getAddon(id)?.prices[product.name] !== undefined));
     });
 }
 
-const delay = ms => new Promise(r => setTimeout(r, ms));
+const quantityOf = name => state.quantities[name] || 0;
+const visibleProducts = () => C.PRODUCTS.filter(product =>
+    !state.categories.length || state.categories.includes(product.category));
 
-function buildChips(containerId, items, stepId, multi = false) {
-    const container = document.getElementById(containerId);
-    items.forEach(text => {
-        const chip = document.createElement('button');
-        chip.className = 'config-chip';
-        chip.type = 'button';
-        chip.setAttribute('aria-pressed', 'false');
-        chip.textContent = text;
-        chip.onclick = () => handleChipClick(chip, container, text, stepId, multi);
-        container.appendChild(chip);
-    });
-}
-
-function handleChipClick(chip, container, value, stepId, multi) {
-    if (multi) {
-        chip.classList.toggle('selected');
-        if (chip.classList.contains('selected')) {
-            if (!state.conditions.includes(value)) state.conditions.push(value);
-        } else {
-            state.conditions = state.conditions.filter(c => c !== value);
-        }
-    } else {
-        container.querySelectorAll('.config-chip').forEach(c => c.classList.remove('selected'));
-        chip.classList.add('selected');
-        if (stepId === 1) state.customerType = value;
-        if (stepId === 2) { state.serviceType = value; updateVisibleProducts(); }
-    }
-    container.querySelectorAll('.config-chip').forEach(button => {
-        button.setAttribute('aria-pressed', String(button.classList.contains('selected')));
-    });
-    updateSummary();
-    updateHeroBadges();
-}
-
-function buildNumbers(containerId, items) {
-    const container = document.getElementById(containerId);
-    items.forEach(item => {
-        state.quantities[item.name] = 0;
-        const div = document.createElement('div');
-        // Slug generation for class based targeting
-        const slug = item.name.toLowerCase()
-            .replace(/\s+/g, '-')
-            .replace(/[()]/g, '') // Remove parenthesis
-            .replace(/couch/g, 'couch')
-            .replace(/ü/g, 'ue')
-            .replace(/ö/g, 'oe')
-            .replace(/ä/g, 'ae');
-
-        div.className = `config-num-item config-item-${slug}`;
-        div.dataset.category = item.category;
-        div.dataset.product = item.name;
-        div.innerHTML = `
-                <div class="config-product-row">
-                    <span class="config-num-label">${item.name}</span>
-                    <div class="config-num-controls">
-                        <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl verringern" onclick="changeQty('${item.name}', -1)">−</button>
-                        <span class="config-num-value" id="qty-${item.name.replace(/\s/g, '-')}">0</span>
-                        <button type="button" class="config-num-btn" aria-label="${item.name}: Anzahl erhöhen" onclick="changeQty('${item.name}', 1)">+</button>
-                    </div>
-                </div>
-                `;
-        if (hasCouchAddons(item.name)) {
-            div.classList.add('config-couch-item');
-            const addons = document.createElement('div');
-            addons.className = 'config-couch-addons';
-            addons.hidden = true;
-            div.appendChild(addons);
-        }
-        container.appendChild(div);
-    });
-}
-
-function renderCouchAddons(name) {
-    if (!hasCouchAddons(name)) return;
-    const quantity = state.quantities[name] || 0;
-    const units = state.couchAddons[name] || [];
-    units.length = quantity;
-    for (let index = 0; index < quantity; index++) units[index] ||= [];
-    state.couchAddons[name] = units;
-    const item = Array.from(document.querySelectorAll('#numbers3 .config-num-item'))
-        .find(element => element.dataset.product === name);
-    const container = item.querySelector('.config-couch-addons');
-    container.hidden = quantity === 0;
-    container.replaceChildren();
-    units.forEach((selected, unitIndex) => {
-        const fieldset = document.createElement('fieldset');
-        fieldset.className = 'config-addon-unit';
-        const legend = document.createElement('legend');
-        legend.textContent = `${name}${quantity > 1 ? ` ${unitIndex + 1}` : ''} · Passende Extras`;
-        fieldset.appendChild(legend);
-        COUCH_ADDONS.forEach(addon => {
-            if (!Object.hasOwn(addon.prices, name)) return;
-            const label = document.createElement('label');
-            label.className = 'config-addon-option';
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.value = addon.id;
-            checkbox.checked = selected.includes(addon.id);
-            checkbox.dataset.addon = addon.id;
-            checkbox.setAttribute('aria-label', `${name} ${unitIndex + 1}: ${addon.name}, +${addon.prices[name]} Euro`);
-            const copy = document.createElement('span');
-            copy.className = 'config-addon-copy';
-            const title = document.createElement('span');
-            title.textContent = addon.name;
-            const description = document.createElement('small');
-            description.textContent = addon.description;
-            copy.append(title, description);
-            const price = document.createElement('strong');
-            price.className = 'config-addon-price';
-            price.textContent = `+${addon.prices[name]} €`;
-            label.append(checkbox, copy, price);
-            fieldset.appendChild(label);
-            checkbox.addEventListener('change', () => {
-                let next = state.couchAddons[name][unitIndex].filter(id => id !== addon.id);
-                if (checkbox.checked) next.push(addon.id);
-                // The intensive treatment already includes odor treatment.
-                if (next.includes('intensive')) next = next.filter(id => id !== 'odor');
-                state.couchAddons[name][unitIndex] = next;
-                syncAddonInputs(fieldset, next);
-                updateSummary();
-            });
-        });
-        syncAddonInputs(fieldset, selected);
-        container.appendChild(fieldset);
-    });
-    if (quantity > 0) {
-        const note = document.createElement('p');
-        note.className = 'config-addon-note';
-        note.textContent = 'Die Extras gelten pro Möbelstück. Welche Behandlung geeignet ist, hängt vom Material und Zustand ab. Nicht alle Flecken und Gerüche lassen sich vollständig entfernen.';
-        container.appendChild(note);
-    }
-}
-
-function syncAddonInputs(fieldset, selected) {
-    fieldset.querySelectorAll('input').forEach(input => {
-        input.checked = selected.includes(input.value);
-        input.disabled = input.value === 'odor' && selected.includes('intensive');
-        if (input.value === 'odor') {
-            input.closest('label').querySelector('small').textContent = input.disabled
-                ? 'Bereits in der gewählten Intensivreinigung enthalten.'
-                : COUCH_ADDONS.find(addon => addon.id === 'odor').description;
-        }
-    });
-}
-
-function getSelectedServices(selection = state) {
-    const services = [];
-    STEPS[2].numbers.forEach(product => {
-        const quantity = selection.quantities[product.name] || 0;
-        const visible = selection.serviceType === 'Beides'
-            || (selection.serviceType === 'Polstermöbel' && product.category === 'polster')
-            || (selection.serviceType === 'Matratzen' && product.category === 'matratze');
-        if (!visible || quantity <= 0) return;
-        services.push({ name: product.name, quantity, pricePerUnit: product.price,
-            totalPrice: product.price * quantity, duration: product.duration * quantity, category: product.category });
-        (selection.couchAddons[product.name] || []).slice(0, quantity).forEach((selected, unitIndex) => {
-            COUCH_ADDONS.forEach(addon => {
-                if (!selected.includes(addon.id) || addon.prices[product.name] === undefined) return;
-                if (addon.id === 'odor' && selected.includes('intensive')) return;
-                services.push({
-                    name: `${product.name} ${unitIndex + 1}: ${addon.name}`,
-                    quantity: 1, pricePerUnit: addon.prices[product.name], totalPrice: addon.prices[product.name],
-                    duration: addon.durations[product.name], category: product.category, addonId: addon.id,
-                    parentProduct: product.name, parentUnit: unitIndex + 1
-                });
-            });
-        });
-    });
-    return services;
-}
-
-// The n8n build embeds this exact pure calculation and its catalog. Keep DOM
-// access in updateSummary; pricing must also run without a browser on the server.
 function calculateBooking(selection = state) {
-    const services = getSelectedServices(selection);
-    const baseTotal = services.reduce((sum, item) => sum + (item.addonId ? 0 : item.totalPrice), 0);
-    const addonTotal = services.reduce((sum, item) => sum + (item.addonId ? item.totalPrice : 0), 0);
-    const subtotal = baseTotal + addonTotal;
-    const discountFactor = selection.customerType === 'Geschäftskunde' ? 0.9 : 1;
-    const conditionPercent = Math.max(0, ...selection.conditions.map(condition => DYNAMIC_CONTENT.conditions[condition]?.surcharge || 0));
-    // Preserve the existing pet treatment for mattresses. Upholstery
-    // treatments are charged exclusively through their explicitly selected extras.
-    const otherFurnitureTotal = services.filter(item => !item.addonId && !hasCouchAddons(item.name))
-        .reduce((sum, item) => sum + item.totalPrice, 0);
-    const petSurcharge = selection.conditions.includes('Haustiere') && conditionPercent === 0
-        ? otherFurnitureTotal * 0.1 * discountFactor : 0;
-    const zone = DYNAMIC_CONTENT.locations[selection.location]?.zone;
-    const minimum = getZoneRule(zone).minOrder;
-    const subtotalAfterDiscount = subtotal * discountFactor;
-    const conditionSurcharge = subtotalAfterDiscount * conditionPercent / 100;
-    const beforeMinimum = subtotalAfterDiscount + conditionSurcharge + petSurcharge + 20;
-    const minimumAdjustment = Math.max(0, (subtotal > 0 ? minimum : 0) - beforeMinimum);
-    const finalTotal = Math.round(beforeMinimum + minimumAdjustment);
-    const cents = value => Math.round((value + Number.EPSILON) * 100) / 100;
-    const discountAmount = cents(subtotal - subtotalAfterDiscount);
-    const roundingAdjustment = cents(finalTotal - (subtotal - discountAmount
-        + cents(conditionSurcharge) + cents(petSurcharge) + 20 + cents(minimumAdjustment)));
-    return { services, baseTotal, addonTotal, subtotal, finalTotal, conditionPercent, petSurcharge, otherFurnitureTotal,
-        discountPercent: discountFactor === 1 ? 0 : 10, discountAmount,
-        subtotalAfterDiscount: cents(subtotalAfterDiscount), conditionSurcharge: cents(conditionSurcharge),
-        travelFee: 20, minimum, minimumAdjustment: cents(minimumAdjustment), roundingAdjustment,
-        totalDuration: services.reduce((sum, item) => sum + item.duration, 0),
-        itemCount: services.filter(item => !item.addonId).reduce((sum, item) => sum + item.quantity, 0) };
+    return C.calculateBooking({ ...selection, zone: C.LOCATIONS[selection.location]?.zone });
 }
 
-function updateVisibleProducts() {
-    const step3 = document.getElementById('step3');
-    const items = document.querySelectorAll('#numbers3 .config-num-item');
-
-    // Hide Step 3 entirely if no service type selected
-    if (!state.serviceType) {
-        if (step3) step3.style.display = 'none';
-        items.forEach(item => item.style.display = 'none');
-        return;
-    }
-
-    // Show Step 3
-    if (step3) {
-        step3.style.display = 'block';
-        const productLabel = document.getElementById('label3');
-        if (productLabel) {
-            productLabel.textContent = STEPS.find(step => step.id === 3).label;
-            productLabel.classList.add('visible');
-        }
-        // Ensure visibility class is there if called after animation
-        if (!step3.classList.contains('visible') && started) {
-            step3.classList.add('visible');
-            document.getElementById('num3').classList.add('visible');
-        }
-    }
-
+// ── Schritt 1 und 4: Chips ──────────────────────────────────────────────────
+function buildChips(container, items, isSelected, onToggle) {
+    container.replaceChildren();
     items.forEach(item => {
-        const cat = item.dataset.category;
-        let shouldShow = false;
-
-        if (state.serviceType === 'Polstermöbel') shouldShow = (cat === 'polster');
-        else if (state.serviceType === 'Matratzen') shouldShow = (cat === 'matratze');
-        else shouldShow = true; // Beides or fallback
-
-        item.style.display = shouldShow ? 'flex' : 'none';
-        if (!shouldShow) {
-            const name = item.dataset.product;
-            state.quantities[name] = 0;
-            document.getElementById(`qty-${name.replace(/\s/g, '-')}`).textContent = '0';
-            renderCouchAddons(name);
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'cfg-chip';
+        chip.append(document.createTextNode(item.label));
+        if (item.badge) {
+            const badge = document.createElement('small');
+            badge.textContent = item.badge;
+            chip.append(badge);
         }
-        if (shouldShow && started) item.classList.add('visible');
+        chip.setAttribute('aria-pressed', String(isSelected(item)));
+        chip.addEventListener('click', () => { onToggle(item); renderAll(); });
+        container.append(chip);
     });
+}
+
+function renderCustomerType() {
+    buildChips($('cfgCustomer'), [
+        { label: 'Privatkunde', value: 'Privatkunde' },
+        { label: 'Geschäftskunde', value: 'Geschäftskunde', badge: `−${C.BUSINESS_DISCOUNT_PERCENT}%` }
+    ], item => state.customerType === item.value, item => { state.customerType = item.value; });
+}
+
+function renderConditions() {
+    buildChips($('cfgConditions'), Object.entries(C.CONDITIONS).map(([name, data]) => ({
+        label: `${data.icon} ${name}`, value: name, badge: data.badge
+    })), item => state.conditions.includes(item.value), item => {
+        state.conditions = state.conditions.includes(item.value)
+            ? state.conditions.filter(name => name !== item.value)
+            : [...state.conditions, item.value];
+    });
+    const note = $('cfgConditionNote');
+    const selected = state.conditions.map(name => `<strong>${C.CONDITIONS[name].title}:</strong> ${C.CONDITIONS[name].desc}`);
+    note.hidden = selected.length === 0;
+    if (selected.length) $('cfgConditionNoteText').innerHTML = selected.join('<br>');
+}
+
+// ── Schritt 2: Kategorien ───────────────────────────────────────────────────
+function renderCategories() {
+    const container = $('cfgCategories');
+    container.replaceChildren();
+    C.CATEGORIES.forEach(category => {
+        const chosen = state.categories.includes(category.id);
+        const count = C.PRODUCTS.filter(product => product.category === category.id)
+            .reduce((sum, product) => sum + quantityOf(product.name), 0);
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'cfg-cat';
+        button.setAttribute('aria-pressed', String(chosen));
+        button.innerHTML = svg(category.id);
+        const title = document.createElement('strong');
+        title.textContent = category.label;
+        const desc = document.createElement('span');
+        desc.textContent = category.desc;
+        button.append(title, desc);
+        if (count) {
+            const badge = document.createElement('span');
+            badge.className = 'cfg-cat-count';
+            badge.textContent = `${count} ausgewählt`;
+            button.append(badge);
+        }
+        button.addEventListener('click', () => toggleCategory(category.id));
+        container.append(button);
+    });
+}
+
+// Eine abgewählte Kategorie darf keine unsichtbaren Positionen zurücklassen.
+function toggleCategory(id) {
+    if (state.categories.includes(id)) {
+        state.categories = state.categories.filter(entry => entry !== id);
+        C.PRODUCTS.filter(product => product.category === id).forEach(product => {
+            delete state.quantities[product.name];
+            delete state.couchAddons[product.name];
+        });
+    } else {
+        state.categories = [...state.categories, id];
+    }
+    renderAll();
+}
+
+// ── Schritt 3: Produktkarten ────────────────────────────────────────────────
+function renderProducts() {
+    const container = $('cfgProducts');
+    container.replaceChildren();
+    const groups = C.CATEGORIES.filter(category =>
+        visibleProducts().some(product => product.category === category.id));
+    groups.forEach(category => {
+        const group = document.createElement('div');
+        group.className = 'cfg-group';
+        const heading = document.createElement('h3');
+        heading.textContent = category.label;
+        const grid = document.createElement('div');
+        grid.className = 'cfg-grid';
+        visibleProducts().filter(product => product.category === category.id)
+            .forEach(product => grid.append(buildCard(product)));
+        group.append(heading, grid);
+        container.append(group);
+    });
+}
+
+function buildCard(product) {
+    const quantity = quantityOf(product.name);
+    const card = document.createElement('article');
+    card.className = 'cfg-card' + (quantity ? ' is-active' : '');
+    if (quantity && C.hasAddons(product.name)) card.classList.add('is-open');
+
+    const media = document.createElement('div');
+    media.className = 'cfg-media';
+    const image = document.createElement('img');
+    // Varianten desselben Möbelstücks teilen sich ein Foto (ui.image).
+    image.src = `images/config/${product.ui.image || product.ui.id}.webp`;
+    image.alt = `${product.name} — Reinigung durch ECO Clean Österreich`;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    // Fehlt das Foto, tritt das Kategorie-Icon an seine Stelle; Badge und
+    // Mengenmarker bleiben erhalten.
+    image.addEventListener('error', () => {
+        const holder = document.createElement('div');
+        holder.innerHTML = svg(product.category);
+        image.replaceWith(holder.firstElementChild);
+    }, { once: true });
+    media.append(image);
+    if (product.ui.badge) {
+        const badge = document.createElement('span');
+        badge.className = 'cfg-badge';
+        badge.textContent = product.ui.badge;
+        media.append(badge);
+    }
+    if (quantity) {
+        const flag = document.createElement('span');
+        flag.className = 'cfg-qty-flag';
+        flag.textContent = `${quantity}×`;
+        media.append(flag);
+    }
+
+    const body = document.createElement('div');
+    body.className = 'cfg-card-body';
+    const title = document.createElement('h4');
+    title.textContent = product.name;
+    const blurb = document.createElement('p');
+    blurb.className = 'cfg-card-blurb';
+    blurb.textContent = product.ui.blurb;
+    const price = document.createElement('p');
+    price.className = 'cfg-price';
+    price.innerHTML = `<strong>${product.price} €</strong> / Stück · ca. ${product.duration} Min.`;
+    body.append(title, blurb, price, buildTip(`Was zählt als „${product.name}"?`, product.ui.tip));
+
+    const stepper = document.createElement('div');
+    stepper.className = 'cfg-stepper';
+    const label = document.createElement('span');
+    label.textContent = 'Anzahl';
+    const controls = document.createElement('div');
+    const minus = stepButton('−', `${product.name}: Anzahl verringern`, () => changeQty(product.name, -1));
+    minus.disabled = quantity === 0;
+    const count = document.createElement('span');
+    count.className = 'cfg-count';
+    count.textContent = String(quantity);
+    count.setAttribute('aria-live', 'polite');
+    count.setAttribute('aria-label', `${product.name}: ${quantity} Stück`);
+    controls.append(minus, count, stepButton('+', `${product.name}: Anzahl erhöhen`, () => changeQty(product.name, 1)));
+    stepper.append(label, controls);
+    body.append(stepper);
+    card.append(media, body);
+
+    if (quantity && C.hasAddons(product.name)) card.append(buildExtras(product, quantity));
+    return card;
+}
+
+function stepButton(glyph, label, onClick) {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'cfg-step-btn';
+    button.textContent = glyph;
+    button.setAttribute('aria-label', label);
+    button.addEventListener('click', onClick);
+    return button;
+}
+
+function buildTip(summaryText, bodyText) {
+    const details = document.createElement('details');
+    details.className = 'cfg-tip';
+    const summary = document.createElement('summary');
+    summary.textContent = summaryText;
+    const body = document.createElement('p');
+    body.textContent = bodyText;
+    details.append(summary, body);
+    return details;
 }
 
 function changeQty(name, delta) {
-    state.quantities[name] = Math.max(0, (state.quantities[name] || 0) + delta);
-    document.getElementById(`qty-${name.replace(/\s/g, '-')}`).textContent = state.quantities[name];
-    renderCouchAddons(name);
-    updateSummary();
-    updateHeroBadges();
+    const next = Math.max(0, Math.min(99, quantityOf(name) + delta));
+    if (next === 0) {
+        delete state.quantities[name];
+        delete state.couchAddons[name];
+    } else {
+        state.quantities[name] = next;
+        const units = state.couchAddons[name] || [];
+        // Entfernte Stücke nehmen ihre Extras mit — sie dürfen nicht zurückkommen.
+        state.couchAddons[name] = Array.from({ length: next }, (unused, index) => units[index] || []);
+    }
+    renderAll();
+}
+
+// ── Extras ──────────────────────────────────────────────────────────────────
+// 'unit'-Produkte bekommen pro Stück eine eigene Auswahl, 'all'-Produkte eine
+// gemeinsame. Intern ist beides dieselbe Struktur, damit die Preisberechnung
+// nur einen Fall kennt.
+function buildExtras(product, quantity) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'cfg-extras';
+    const perUnit = product.addonScope === 'unit';
+    const units = perUnit ? Array.from({ length: quantity }, (unused, index) => index) : [0];
+    const available = C.addonsFor(product.name);
+    const choiceGroups = [...new Set(available.filter(addon => addon.group).map(addon => addon.group))];
+    units.forEach(unitIndex => {
+        choiceGroups.forEach(groupId => {
+            wrapper.append(buildChoiceGroup(product, groupId,
+                available.filter(addon => addon.group === groupId), unitIndex, perUnit, quantity));
+        });
+        const fieldset = document.createElement('fieldset');
+        fieldset.className = 'cfg-unit';
+        const legend = document.createElement('legend');
+        legend.textContent = perUnit
+            ? `${product.name}${quantity > 1 ? ` ${unitIndex + 1}` : ''} · Passende Extras`
+            : `Extras für alle ${quantity} Stück`;
+        fieldset.append(legend);
+        available.filter(addon => !addon.group).forEach(addon => {
+            fieldset.append(buildAddonRow(product, addon, unitIndex, perUnit, quantity));
+        });
+        if (PILLOW_HOSTS.includes(product.name) && unitIndex === 0) fieldset.append(buildPillowRow());
+        wrapper.append(fieldset);
+    });
+    const note = document.createElement('p');
+    note.textContent = perUnit
+        ? 'Die Extras gelten jeweils für ein Möbelstück. Welche Behandlung möglich ist, hängt von Material und Zustand ab — nicht jeder Fleck und nicht jeder Geruch lässt sich vollständig entfernen.'
+        : `Diese Auswahl gilt für alle ${quantity} Stück. Welche Behandlung möglich ist, hängt von Material und Zustand ab — nicht jeder Fleck und nicht jeder Geruch lässt sich vollständig entfernen.`;
+    wrapper.append(note);
+    return wrapper;
+}
+
+// Sich ausschließende Pflichtangaben (Material, Florhöhe) als Radiogruppe.
+// Die Standardvariante ist im Grundpreis enthalten und setzt keinen Aufschlag.
+function buildChoiceGroup(product, groupId, addons, unitIndex, perUnit, quantity) {
+    const meta = C.ADDON_GROUPS[groupId];
+    const selected = state.couchAddons[product.name]?.[unitIndex] || [];
+    const active = addons.find(addon => selected.includes(addon.id));
+    const fieldset = document.createElement('fieldset');
+    fieldset.className = 'cfg-unit cfg-choice-group';
+    const legend = document.createElement('legend');
+    legend.textContent = perUnit && quantity > 1
+        ? `${product.name} ${unitIndex + 1} · ${meta.label}`
+        : `${product.name} · ${meta.label}`;
+    fieldset.append(legend);
+    const radioName = `${product.ui.id}-${groupId}-${unitIndex}`;
+
+    const option = (id, label, price, tip, description) => {
+        const row = document.createElement('label');
+        row.className = 'cfg-addon';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = radioName;
+        input.checked = (active?.id || null) === id;
+        input.addEventListener('change', () => selectChoice(product, groupId, id, unitIndex, perUnit));
+        const name = document.createElement('span');
+        name.className = 'cfg-addon-name';
+        name.textContent = label;
+        const cost = document.createElement('span');
+        cost.className = 'cfg-addon-price';
+        cost.textContent = price ? `+${price} €` : 'im Preis';
+        const desc = document.createElement('p');
+        desc.className = 'cfg-addon-desc';
+        desc.textContent = description;
+        row.append(input, name, cost, desc, buildTip('Wann trifft das zu?', tip));
+        return row;
+    };
+
+    fieldset.append(option(null, meta.baseLabel, 0, meta.baseTip, 'Standardfall — kein Aufschlag.'));
+    addons.forEach(addon => fieldset.append(
+        option(addon.id, addon.name, addon.prices[product.name], addon.tip, addon.description)));
+
+    // Was wir nicht reinigen, gehört sichtbar in die Liste — sonst bucht jemand
+    // einen Termin, den wir vor Ort absagen müssten.
+    if (meta.unavailable) {
+        const row = document.createElement('label');
+        row.className = 'cfg-addon cfg-addon-blocked';
+        const input = document.createElement('input');
+        input.type = 'radio';
+        input.name = radioName;
+        input.disabled = true;
+        const name = document.createElement('span');
+        name.className = 'cfg-addon-name';
+        name.textContent = meta.unavailable.label;
+        const cost = document.createElement('span');
+        cost.className = 'cfg-addon-price';
+        cost.textContent = 'nicht möglich';
+        const desc = document.createElement('p');
+        desc.className = 'cfg-addon-desc';
+        desc.textContent = meta.unavailable.reason;
+        row.append(input, name, cost, desc);
+        fieldset.append(row);
+    }
+    return fieldset;
+}
+
+function selectChoice(product, groupId, addonId, unitIndex, perUnit) {
+    const groupIds = C.ADDONS.filter(addon => addon.group === groupId).map(addon => addon.id);
+    const apply = units => {
+        const next = units.filter(id => !groupIds.includes(id));
+        if (addonId) next.push(addonId);
+        return next;
+    };
+    const units = state.couchAddons[product.name] || [];
+    state.couchAddons[product.name] = perUnit
+        ? units.map((entry, index) => (index === unitIndex ? apply(entry || []) : entry || []))
+        : units.map(entry => apply(entry || []));
+    renderAll();
+}
+
+// Kissen werden dort angeboten, wo sie liegen — an der Couch. Gebucht wird
+// dabei die reguläre Position „Zierkissen", damit Buchungsdaten und Tarif
+// unverändert bleiben.
+function buildPillowRow() {
+    const product = C.getProduct(PILLOW_PRODUCT);
+    const quantity = quantityOf(PILLOW_PRODUCT);
+    const row = document.createElement('div');
+    row.className = 'cfg-addon cfg-count-row' + (quantity ? ' is-on' : '');
+    const name = document.createElement('span');
+    name.className = 'cfg-addon-name';
+    name.textContent = 'Kissen mitreinigen, die nicht in die Waschmaschine passen';
+    const controls = document.createElement('span');
+    controls.className = 'cfg-count-controls';
+    const minus = stepButton('−', 'Kissen: Anzahl verringern', () => changeQty(PILLOW_PRODUCT, -1));
+    minus.disabled = quantity === 0;
+    const value = document.createElement('span');
+    value.className = 'cfg-count';
+    value.textContent = String(quantity);
+    controls.append(minus, value, stepButton('+', 'Kissen: Anzahl erhöhen', () => changeQty(PILLOW_PRODUCT, 1)));
+    const desc = document.createElement('p');
+    desc.className = 'cfg-addon-desc';
+    desc.textContent = `${product.price} € pro Kissen · ${quantity ? `derzeit ${quantity} Stück, ` : ''}erscheint als eigene Position in der Übersicht.`;
+    row.append(name, controls, desc, buildTip('Welche Kissen sind gemeint?', product.ui.tip));
+    return row;
+}
+
+function buildAddonRow(product, addon, unitIndex, perUnit, quantity) {
+    const selected = state.couchAddons[product.name]?.[unitIndex] || [];
+    const blockedByIntensive = addon.id === 'odor' && selected.includes('intensive');
+    const unitPrice = addon.prices[product.name];
+    const totalPrice = perUnit ? unitPrice : unitPrice * quantity;
+
+    const label = document.createElement('label');
+    label.className = 'cfg-addon';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.checked = selected.includes(addon.id);
+    input.disabled = blockedByIntensive;
+    input.setAttribute('aria-label',
+        `${product.name}${perUnit && quantity > 1 ? ` ${unitIndex + 1}` : ''}: ${addon.name}, plus ${totalPrice} Euro`);
+    input.addEventListener('change', () => toggleAddon(product, addon.id, unitIndex, perUnit, input.checked));
+
+    const name = document.createElement('span');
+    name.className = 'cfg-addon-name';
+    name.textContent = addon.name;
+    const price = document.createElement('span');
+    price.className = 'cfg-addon-price';
+    price.textContent = perUnit ? `+${unitPrice} €` : `+${totalPrice} €`;
+    const desc = document.createElement('p');
+    desc.className = 'cfg-addon-desc';
+    desc.textContent = blockedByIntensive
+        ? 'Bereits in der gewählten Intensivreinigung enthalten — wird nicht doppelt berechnet.'
+        : (!perUnit && quantity > 1 ? `${addon.description} (${unitPrice} € pro Stück)` : addon.description);
+
+    label.append(input, name, price, desc);
+    // Bei „Haustiere" die dafür gedachten Extras hervorheben, ohne sie
+    // vorauszuwählen — berechnet wird nur, was angehakt ist.
+    if (state.conditions.includes('Haustiere') && ['odor', 'hair'].includes(addon.id) && !blockedByIntensive) {
+        const hint = document.createElement('span');
+        hint.className = 'cfg-addon-hint';
+        hint.textContent = 'Passt zu Ihrem Hinweis „Haustiere"';
+        label.append(hint);
+    }
+    label.append(buildTip('Wann lohnt sich das?', addon.tip));
+    return label;
+}
+
+function toggleAddon(product, addonId, unitIndex, perUnit, checked) {
+    const apply = units => {
+        let next = units.filter(id => id !== addonId);
+        if (checked) next.push(addonId);
+        // Die Intensivreinigung enthält die Geruchsbehandlung bereits.
+        if (next.includes('intensive')) next = next.filter(id => id !== 'odor');
+        return next;
+    };
+    const units = state.couchAddons[product.name] || [];
+    state.couchAddons[product.name] = perUnit
+        ? units.map((entry, index) => (index === unitIndex ? apply(entry || []) : entry || []))
+        : units.map(entry => apply(entry || []));
+    renderAll();
+}
+
+// ── Cross-Selling ───────────────────────────────────────────────────────────
+function addProduct(name) {
+    if (C.getProduct(name)) changeQty(name, 1);
+}
+
+// Ohne Filter sind ohnehin alle Kategorien sichtbar — dann genügt der Sprung
+// zur passenden Gruppe.
+function revealCategory(id) {
+    if (state.categories.length && !state.categories.includes(id)) {
+        state.categories = [...state.categories, id];
+        renderAll();
+    }
+    const label = C.CATEGORIES.find(category => category.id === id).label;
+    [...document.querySelectorAll('#cfgProducts .cfg-group > h3')]
+        .find(heading => heading.textContent === label)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function suggestions() {
+    const list = [];
+    const hasSeating = PILLOW_HOSTS.some(name => quantityOf(name) > 0);
+    const chosenAddons = Object.values(state.couchAddons).flat(2);
+
+    if (hasSeating && !quantityOf('Hocker / Pouf')) list.push({
+        text: 'Der Fußhocker wird am häufigsten benutzt und ist meist schneller grau als die Couch selbst.',
+        label: 'Hocker / Pouf', price: C.getProduct('Hocker / Pouf').price, run: () => addProduct('Hocker / Pouf')
+    });
+    if (hasSeating && !quantityOf(PILLOW_PRODUCT)) list.push({
+        text: 'Große Kissen, die nicht in die Waschmaschine passen, reinigen wir im selben Termin mit.',
+        label: 'Zierkissen', price: C.getProduct(PILLOW_PRODUCT).price, run: () => addProduct(PILLOW_PRODUCT)
+    });
+    if (state.conditions.includes('Haustiere') && hasSeating
+        && !chosenAddons.some(id => ['odor', 'hair', 'intensive'].includes(id))) list.push({
+            text: 'Sie haben Haustiere angegeben. Tierhaare und Geruch sind zwei getrennte Arbeitsschritte — beide sind optional.',
+            label: 'Extras beim Möbelstück wählen',
+            run: () => $('cfgStep3').scrollIntoView({ behavior: 'smooth', block: 'start' })
+        });
+    // Die Anfahrt fällt pro Termin einmal an — der ehrlichste Kombi-Anreiz.
+    const usedCategories = new Set(C.PRODUCTS.filter(product => quantityOf(product.name) > 0).map(product => product.category));
+    if (usedCategories.size === 1 && !usedCategories.has('matratze')) list.push({
+        text: `Die Anfahrt von ${C.TRAVEL_FEE} € fällt pro Termin nur einmal an — Matratzen im selben Termin sparen eine zweite Anfahrt.`,
+        label: 'Matratzen dazunehmen', run: () => revealCategory('matratze')
+    });
+    // Trockenreinigung deckt Flecken und Gerüche nicht ab.
+    const dryMattress = C.PRODUCTS.find(product => product.category === 'matratze'
+        && product.name.includes('(Trocken)') && quantityOf(product.name) > 0);
+    if (dryMattress && state.conditions.some(name => ['Haustiere', 'Kleinkinder'].includes(name))) {
+        const wet = C.getProduct(dryMattress.name.replace('(Trocken)', '(Nass)'));
+        if (wet && !quantityOf(wet.name)) list.push({
+            text: `Bei Flecken und Gerüchen kommt die Trockenreinigung an ihre Grenze — die Nassvariante von „${dryMattress.name}" arbeitet mit Sprühextraktion.`,
+            label: wet.name, price: wet.price, run: () => addProduct(wet.name)
+        });
+    }
+    return list.slice(0, 3);
+}
+
+function renderSuggestions() {
+    const box = $('cfgSuggest');
+    const list = suggestions();
+    box.hidden = list.length === 0;
+    if (!list.length) return;
+    const holder = $('cfgSuggestList');
+    holder.replaceChildren();
+    $('cfgSuggestText').textContent = list[0].text;
+    list.forEach(entry => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'cfg-suggest-btn';
+        button.append(document.createTextNode(`+ ${entry.label}`));
+        if (entry.price) {
+            const price = document.createElement('b');
+            price.textContent = `${entry.price} €`;
+            button.append(price);
+        }
+        button.addEventListener('click', entry.run);
+        holder.append(button);
+    });
+}
+
+// ── Schritt 5: Ort ──────────────────────────────────────────────────────────
+function renderLocationOptions() {
+    const select = $('location');
+    if (select.options.length > 1) return;
+    C.REGION_ORDER.forEach(region => {
+        const group = document.createElement('optgroup');
+        group.label = region;
+        Object.entries(C.LOCATIONS)
+            .filter(([, location]) => location.region === region)
+            .forEach(([key, location]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                const rule = C.getZoneRule(location.zone);
+                option.textContent = location.name + (rule.minOrder ? ` · ab ${rule.minOrder} €` : '');
+                group.append(option);
+            });
+        select.append(group);
+    });
 }
 
 function handleLocationChange(select) {
-    state.location = select.value;
-    updateSummary();
-    updateHeroBadges();
+    state.location = select.value || null;
+    renderAll();
 
-    // Show Step 6 (Address fields) when location is selected
-    const step6 = document.getElementById('step6');
-    if (step6) {
-        if (state.location) {
-            step6.style.display = 'block';
-            step6.classList.add('visible');  // ✅ FONTOS: opacity: 1
-        } else {
-            step6.style.display = 'none';
-            step6.classList.remove('visible');
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════
-    // TRIGGER CALENDAR UPDATE
-    // ═══════════════════════════════════════════════════════════
     if (state.location && typeof BookingCalendar !== 'undefined') {
-        const locationData = DYNAMIC_CONTENT.locations[state.location];
-        if (locationData) {
-            // Show calendar container if hidden
-            const calendarWrapper = document.getElementById('calendarWrapper');
-            if (calendarWrapper) {
-                calendarWrapper.style.display = 'block';
-                calendarWrapper.classList.add('visible');
-            }
-
-            // Update calendar with selected city
-            BookingCalendar.setCity(locationData.name.split('/')[0]);
-
-            // 🆕 ZEIT-EINSCHRÄNKUNG (v2.1): außerhalb Burgenland nur 11:00 / 13:00 Uhr.
-            // Der Kalender (booking-calendar.js) muss setAllowedStartTimes() umsetzen:
-            //   - Array  → nur diese Startzeiten anbieten
-            //   - null   → keine Einschränkung (Burgenland)
-            const rule = getZoneRule(locationData.zone);
-            if (typeof BookingCalendar.setAllowedStartTimes === 'function') {
-                BookingCalendar.setAllowedStartTimes(rule.restrictHours ? RESTRICTED_START_TIMES : null);
-            }
+        const location = C.LOCATIONS[state.location];
+        const wrapper = $('calendarWrapper');
+        if (wrapper) { wrapper.style.display = 'block'; wrapper.classList.add('visible'); }
+        BookingCalendar.setCity(location.name.split('/')[0]);
+        // Außerhalb des Burgenlands sind nur feste Startzeiten fahrbar.
+        const rule = getZoneRule(location.zone);
+        if (typeof BookingCalendar.setAllowedStartTimes === 'function') {
+            BookingCalendar.setAllowedStartTimes(rule.restrictHours ? RESTRICTED_START_TIMES : null);
         }
     }
 }
 
-function updateSummary() {
-    const quote = calculateBooking();
-    const { baseTotal, totalDuration, finalTotal } = quote;
-    const items = quote.services.map(item => `${item.quantity}× ${item.name} · ${item.totalPrice} €`);
-    document.getElementById('basePrice').textContent = baseTotal;
-    document.getElementById('summaryAddons').hidden = quote.addonTotal === 0;
-    document.getElementById('addonsPrice').textContent = quote.addonTotal;
-    document.getElementById('summaryConditions').hidden = quote.conditionPercent === 0;
-    document.getElementById('conditionPercent').textContent = quote.conditionPercent;
-    document.getElementById('summaryPets').hidden = quote.petSurcharge === 0;
-    document.getElementById('petsPrice').textContent = quote.petSurcharge.toLocaleString('de-AT', { maximumFractionDigits: 2 });
-    document.getElementById('summaryMinimumAdjustment').hidden = quote.minimumAdjustment === 0;
-    document.getElementById('minimumAdjustmentPrice').textContent = quote.minimumAdjustment.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.getElementById('summaryRounding').hidden = quote.roundingAdjustment === 0;
-    document.getElementById('roundingPrice').textContent = (quote.roundingAdjustment > 0 ? '+' : '')
-        + quote.roundingAdjustment.toLocaleString('de-AT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    document.querySelectorAll('#chips4 .config-chip').forEach(chip => {
-        if (chip.textContent.startsWith('Haustiere')) {
-            chip.textContent = quote.otherFurnitureTotal > 0
-                ? 'Haustiere (+10% auf Matratzen)'
-                : 'Haustiere (Hinweis, kostenlos)';
+function renderLocationNotes() {
+    const location = state.location ? C.LOCATIONS[state.location] : null;
+    const rule = getZoneRule(location?.zone);
+    $('cfgAddress').hidden = !location;
+    const minNote = $('cfgMinNote');
+    minNote.hidden = !location || !rule.minOrder;
+    if (location && rule.minOrder) {
+        $('cfgMinNoteText').innerHTML = `In <strong>${location.name}</strong> gilt ein Mindestbestellwert von <strong>${rule.minOrder} €</strong> inklusive Anfahrt. Kombinieren Sie mehrere Möbelstücke in einem Termin, dann arbeitet der Betrag für Sie statt gegen Sie.`;
+    }
+    const hoursNote = $('cfgHoursNote');
+    hoursNote.hidden = !location || !rule.restrictHours;
+    if (location && rule.restrictHours) {
+        $('cfgHoursNoteText').innerHTML = `Anfahrt aus dem Burgenland: In <strong>${location.name}</strong> starten wir um <strong>${RESTRICTED_START_TIMES.join(' oder ')} Uhr</strong>. Andere Uhrzeiten lassen sich dort nicht zuverlässig einhalten.`;
+    }
+}
+
+// ── Preisleiste ─────────────────────────────────────────────────────────────
+let displayedTotal = 0;
+function animateTotal(target) {
+    const element = $('cfgTotal');
+    const from = displayedTotal;
+    // Erst den richtigen Wert schreiben, dann animieren: im Hintergrund-Tab
+    // laufen keine Animationsframes, der Preis muss trotzdem stimmen.
+    element.textContent = euro(target);
+    if (from === target || document.visibilityState !== 'visible'
+        || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        displayedTotal = target;
+        return;
+    }
+    const start = performance.now(), duration = 400;
+    const tick = now => {
+        const progress = Math.min(1, (now - start) / duration);
+        displayedTotal = from + (target - from) * (1 - Math.pow(1 - progress, 3));
+        element.textContent = euro(displayedTotal);
+        if (progress < 1) requestAnimationFrame(tick);
+        else { displayedTotal = target; element.textContent = euro(target); }
+    };
+    requestAnimationFrame(tick);
+}
+
+function renderRail(quote) {
+    const empty = quote.itemCount === 0;
+    animateTotal(empty ? 0 : quote.finalTotal);
+    $('cfgTotalNote').textContent = empty
+        ? 'Noch nichts ausgewählt — der Preis aktualisiert sich bei jeder Änderung.'
+        : `Endpreis inkl. Anfahrt und aller gewählten Extras · ${quote.itemCount} Möbelstück${quote.itemCount > 1 ? 'e' : ''}`;
+
+    const lines = $('cfgLines');
+    lines.replaceChildren();
+    $('cfgEmpty').hidden = !empty;
+    quote.services.forEach(item => {
+        const row = document.createElement('li');
+        if (item.addonId) row.className = 'is-addon';
+        const name = document.createElement('span');
+        name.textContent = item.addonId
+            ? `${item.parentProduct} ${item.parentUnit}: ${C.getAddon(item.addonId).name}`
+            : `${item.quantity}× ${item.name}`;
+        const price = document.createElement('span');
+        price.className = 'cfg-line-price';
+        price.textContent = `${item.totalPrice} €`;
+        row.append(name, price);
+        if (!item.addonId) {
+            const drop = document.createElement('button');
+            drop.type = 'button';
+            drop.className = 'cfg-line-drop';
+            drop.textContent = '×';
+            drop.setAttribute('aria-label', `${item.name} entfernen`);
+            drop.addEventListener('click', () => {
+                delete state.quantities[item.name];
+                delete state.couchAddons[item.name];
+                renderAll();
+            });
+            row.append(drop);
         }
+        lines.append(row);
     });
 
-    // 1. ÜGYFÉLTÍPUS KEDVEZMÉNY
-    if (state.customerType === 'Geschäftskunde') {
-        document.getElementById('summaryDiscount').style.display = 'flex';
-    } else {
-        document.getElementById('summaryDiscount').style.display = 'none';
+    const show = (id, condition, text) => {
+        const row = $(id);
+        row.hidden = !condition;
+        if (condition) row.querySelector('strong').textContent = text;
+    };
+    show('cfgSumBase', quote.baseTotal > 0, `${quote.baseTotal} €`);
+    show('cfgSumAddons', quote.addonTotal > 0, `+${quote.addonTotal} €`);
+    show('cfgSumDiscount', quote.discountAmount > 0, `−${cents(quote.discountAmount)} €`);
+    show('cfgSumCondition', quote.conditionSurcharge > 0, `+${cents(quote.conditionSurcharge)} €`);
+    show('cfgSumPets', quote.petSurcharge > 0, `+${cents(quote.petSurcharge)} €`);
+    show('cfgSumTravel', !empty, `+${quote.travelFee} €`);
+    show('cfgSumMinimum', quote.minimumAdjustment > 0, `+${cents(quote.minimumAdjustment)} €`);
+    show('cfgSumRounding', quote.roundingAdjustment !== 0,
+        `${quote.roundingAdjustment > 0 ? '+' : ''}${cents(quote.roundingAdjustment)} €`);
+    $('cfgSumTotal').querySelector('strong').textContent = empty ? '0 €' : euro(quote.finalTotal);
+
+    const hours = Math.floor(quote.totalDuration / 60), minutes = quote.totalDuration % 60;
+    $('cfgDuration').textContent = quote.totalDuration
+        ? (hours ? `${hours} h${minutes ? ` ${minutes} Min.` : ''}` : `${minutes} Min.`)
+        : '—';
+
+    // Mindestbestellwert als Fortschritt: zeigt, wie viel noch fehlt.
+    const bar = $('cfgMinBar');
+    bar.hidden = !quote.minimum || empty;
+    if (!bar.hidden) {
+        const reached = quote.minimumAdjustment === 0;
+        const current = quote.finalTotal - quote.minimumAdjustment;
+        bar.classList.toggle('is-reached', reached);
+        $('cfgMinFill').style.width = `${Math.min(100, (current / quote.minimum) * 100)}%`;
+        $('cfgMinText').textContent = reached
+            ? `Mindestbestellwert von ${quote.minimum} € erreicht.`
+            : `Noch ${euro(quote.minimum - current)} bis zum Mindestbestellwert von ${quote.minimum} € — dieser Betrag wird sonst als Differenz aufgeschlagen.`;
     }
 
-    // 3. ANFAHRTSKOSTEN (fix 20€)
-    const anfahrtskosten = 20;
-    const anfahrtEl = document.getElementById('summaryAnfahrt');
-    if (anfahrtEl) {
-        anfahrtEl.style.display = 'flex';
-        document.getElementById('anfahrtAmount').textContent = `+${anfahrtskosten}`;
-    }
+    $('submitBtn').disabled = empty;
+    $('cfgBarTotal').textContent = empty ? '0 €' : euro(quote.finalTotal);
+    $('cfgBarNote').textContent = empty ? 'Noch keine Auswahl' : `${quote.itemCount} Stück · inkl. Anfahrt`;
+}
 
-    // 4b. MINDESTBESTELLWERT (zonenabhängig: 0 € Burgenland / 199 € angrenzend / 299 € weiter entfernt)
-    const zone = (state.location && DYNAMIC_CONTENT.locations[state.location])
-        ? DYNAMIC_CONTENT.locations[state.location].zone : null;
-    const zoneMinOrder = getZoneRule(zone).minOrder;
-    const mindestEl = document.getElementById('summaryMindest');
-    if (zoneMinOrder > 0 && baseTotal > 0) {
-        if (mindestEl) {
-            mindestEl.style.display = 'flex';
-            // Optional: falls ein Betrags-Element existiert, den korrekten Mindestwert anzeigen
-            const mindestAmountEl = document.getElementById('mindestAmount');
-            if (mindestAmountEl) mindestAmountEl.textContent = zoneMinOrder;
-            else {
-                const minimumLabel = mindestEl.querySelector('strong');
-                if (minimumLabel) minimumLabel.textContent = `${zoneMinOrder} €`;
-            }
-        }
-    } else if (mindestEl) {
-        mindestEl.style.display = 'none';
-    }
+function renderProgress(quote) {
+    const done = [
+        Boolean(state.customerType),
+        state.categories.length > 0 || quote.itemCount > 0,
+        quote.itemCount > 0,
+        quote.itemCount > 0,
+        Boolean(state.location),
+        Boolean(state.selectedSlot)
+    ];
+    $('cfgProgress').querySelectorAll('span').forEach((bar, index) => {
+        bar.classList.toggle('is-done', Boolean(done[index]));
+    });
+    [1, 2, 3, 4, 5, 6].forEach(step => {
+        $(`cfgStep${step}`)?.classList.toggle('is-done', Boolean(done[step - 1]));
+    });
+}
 
-    // Eredmény megjelenítése (kerekítve)
-    document.getElementById('totalPrice').textContent = Math.round(finalTotal);
+// ── Gesamt-Render ───────────────────────────────────────────────────────────
+function updateSummary() { renderAll(); }
 
-    // 5. Időtartam
-    const hours = Math.floor(totalDuration / 60), mins = totalDuration % 60;
-    document.getElementById('totalDuration').textContent = hours > 0
-        ? `${hours}h ${mins > 0 ? mins + 'min' : ''}`
-        : `${mins} Min.`;
+function renderAll() {
+    const quote = calculateBooking();
+    // Abgeleitetes Label für die Buchungsdaten und die Badges.
+    const used = C.CATEGORIES.filter(category =>
+        C.PRODUCTS.some(product => product.category === category.id && quantityOf(product.name) > 0));
+    state.serviceType = used.map(category => category.label).join(' + ') || null;
 
-    // 6. Kiválasztott tételek
-    document.getElementById('summaryItems').innerHTML = items.length
-        ? items.map(i => `<span class="config-summary-item">${i}</span>`).join('')
-        : '<span class="config-summary-item">Noch keine Auswahl</span>';
+    renderCustomerType();
+    renderCategories();
+    renderProducts();
+    renderConditions();
+    renderSuggestions();
+    renderLocationNotes();
+    renderRail(quote);
+    renderProgress(quote);
+    updateHeroBadges();
+    saveState();
 
-    // 7. Helyszín
-    if (state.location && DYNAMIC_CONTENT.locations[state.location]) {
-        document.getElementById('summaryLocation').style.display = 'flex';
-        document.getElementById('locationText').innerHTML = `Standort: <strong>${DYNAMIC_CONTENT.locations[state.location].name}</strong>`;
-    } else {
-        document.getElementById('summaryLocation').style.display = 'none';
-    }
-
-    // 🆕 UPDATE CALENDAR WITH REQUIRED DURATION
+    // Eine längere Reinigung darf keinen bereits bestätigten, kürzeren Slot behalten.
     if (typeof BookingCalendar !== 'undefined' && BookingCalendar.setRequiredDuration) {
-        if (BookingCalendar.state.requiredDuration !== totalDuration) {
-            // A longer order must not retain a previously confirmed, shorter slot.
+        if (BookingCalendar.state.requiredDuration !== quote.totalDuration) {
             if (BookingCalendar.getSelectedSlot()) {
                 BookingCalendar.backToCalendar();
                 state.selectedSlot = null;
                 state.selectedDate = null;
-                document.getElementById('summaryTiming').style.display = 'none';
             }
-            BookingCalendar.setRequiredDuration(totalDuration);
+            BookingCalendar.setRequiredDuration(quote.totalDuration);
         }
     }
+    renderAppointment(state.selectedSlot
+        ? { date: state.selectedDate, slot: state.selectedSlot, isFirstSlot: state.selectedSlot.isFirstSlot }
+        : null);
+}
+
+function resetConfigurator() {
+    state.customerType = 'Privatkunde';
+    state.categories = [];
+    state.quantities = {};
+    state.couchAddons = {};
+    state.conditions = [];
+    state.location = null;
+    state.selectedDate = null;
+    state.selectedSlot = null;
+    $('location').value = '';
+    ['street', 'plz', 'city', 'contactName', 'contactEmail', 'contactEmailConfirm', 'contactPhone', 'contactMessage']
+        .forEach(id => { const field = $(id); if (field) field.value = ''; });
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* privater Modus */ }
+    renderAll();
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -699,14 +847,16 @@ function updateHeroBadges() {
 
     // Build badges array in CHRONOLOGICAL order (booking flow)
     // 1. Customer Type
-    if (state.customerType && DYNAMIC_CONTENT.customerType[state.customerType]) {
-        badges.push(DYNAMIC_CONTENT.customerType[state.customerType]);
+    if (state.customerType && CUSTOMER_TYPES[state.customerType]) {
+        badges.push(CUSTOMER_TYPES[state.customerType]);
     }
 
-    // 2. Service Type
-    if (state.serviceType && DYNAMIC_CONTENT.serviceType[state.serviceType]) {
-        badges.push(DYNAMIC_CONTENT.serviceType[state.serviceType]);
-    }
+    // 2. Gewählte Kategorien — ein Badge pro tatsächlich belegter Kategorie
+    C.CATEGORIES.filter(category => C.PRODUCTS.some(product =>
+        product.category === category.id && (state.quantities[product.name] || 0) > 0))
+        .forEach(category => badges.push({
+            icon: '🧽', title: category.label, desc: category.desc
+        }));
 
     // 3. Conditions (in order they were selected)
     state.conditions.forEach(cond => {
@@ -1321,23 +1471,68 @@ function isValidEmail(email) {
 // ═══════════════════════════════════════════════════════════
 // INITIALIZATION
 // ═══════════════════════════════════════════════════════════
-function init() {
-    buildChips('chips1', STEPS[0].chips, 1);
-    buildChips('chips2', STEPS[1].chips, 2);
-    buildNumbers('numbers3', STEPS[2].numbers);
-    buildChips('chips4', STEPS[3].chips, 4, true);
-    document.querySelectorAll('#chips4 .config-chip').forEach(chip => {
-        if (chip.textContent === 'Haustiere') chip.textContent = 'Haustiere (Hinweis, kostenlos)';
-        if (chip.textContent === 'Allergiker') chip.textContent = 'Allergiker (+10%)';
+// ═══════════════════════════════════════════════════════════
+// KALENDER — der bestätigte Slot ist Teil der Buchung, nicht
+// nur eine Anzeige. Ohne Datum und Uhrzeit wird nicht gebucht.
+// ═══════════════════════════════════════════════════════════
+function wireCalendar() {
+    const container = document.getElementById('bookingCalendar');
+    if (!container) return;
+    container.addEventListener('dateSelected', event => {
+        state.selectedDate = event.detail.date;
+        state.selectedSlot = event.detail.slot;
+        // Kein renderAll(): das würde den Kalender neu aufbauen und die
+        // gerade bestätigte Auswahl wieder verwerfen.
+        renderAppointment(event.detail);
+        renderProgress(calculateBooking());
     });
-    // STEPS[5] eltávolítva - nem létezik (a tömb 5 elemű, 0-4 index).
-    // Az 5. lépés (STEPS[4]) egy select-mező, a 6. "lépés" a naptár, nem chip.
+}
 
-    // Initialize visibility (Hide Step 3 initially)
-    updateVisibleProducts();
+function renderAppointment(detail) {
+    const row = document.getElementById('cfgSumAppointment');
+    if (!row) return;
+    if (!detail?.date || !detail?.slot) { row.hidden = true; return; }
+    const date = new Date(detail.date).toLocaleDateString('de-AT', { weekday: 'short', day: 'numeric', month: 'short' });
+    const time = detail.slot.startTime;
+    row.hidden = false;
+    row.querySelector('strong').textContent = detail.isFirstSlot
+        ? `${date}, ${time} Uhr`
+        : `${date}, ca. ${time} Uhr (±30 Min.)`;
+}
 
-    console.log('ECO Clean Konfigurator v2.2.0 - CENTAUR TRIAD Edition');
-    console.log('n8n Webhook:', N8N_CONFIG.webhookUrl);
+function init() {
+    if (!document.getElementById('cfgProducts')) return;   // Seite ohne Konfigurator
+    // Der Rechner steht offen da — Kopfzeile und Panel brauchen keinen Klick.
+    document.getElementById('configurator')?.classList.add('active');
+    document.getElementById('configPanel')?.classList.add('active');
+    document.getElementById('configHeader')?.classList.add('visible');
+    document.getElementById('configIcon')?.classList.add('visible');
+    document.getElementById('configBadge')?.classList.add('visible');
+    const title = document.getElementById('configTitle');
+    if (title) title.textContent = 'Preis berechnen und Termin wählen';
+    const badgeText = document.getElementById('badgeText');
+    if (badgeText) badgeText.textContent = 'LIVE';
+
+    wireCalendar();
+    renderLocationOptions();
+    restoreState();
+    if (state.location) {
+        document.getElementById('location').value = state.location;
+        handleLocationChange(document.getElementById('location'));
+    }
+    document.getElementById('cfgReset')?.addEventListener('click', resetConfigurator);
+    document.getElementById('cfgPrint')?.addEventListener('click', () => window.print());
+    document.getElementById('cfgBarCta')?.addEventListener('click', () =>
+        document.getElementById('cfgStep6').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    renderAll();
+
+    // Direkteinstieg aus einer Kampagne oder von einer Unterseite.
+    if (new URLSearchParams(window.location.search).get('start') === 'true') {
+        setTimeout(() => {
+            startAnimation();
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }, 300);
+    }
 }
 
 // Wait for DOM to be fully loaded before initializing
@@ -1352,98 +1547,29 @@ if (document.readyState === 'loading') {
 // ANIMATION LOGIC
 // ═══════════════════════════════════════════════════════════
 
+// Der Konfigurator ist jetzt von Anfang an sichtbar; die CTAs springen nur noch
+// dorthin. Kein stufenweises Einblenden mehr — wer den Preis sucht, soll ihn
+// sofort sehen und nicht auf eine Animation warten.
 function startAnimation() {
-    // The homepage keeps the offer in its own section. Every CTA returns to it,
-    // including repeat clicks after the configurator has already been opened.
-    if (document.body.classList.contains('px-site')) {
-        const destination = document.getElementById('configurator');
-        destination.classList.add('active');
-        requestAnimationFrame(() => {
-            destination.focus({ preventScroll: true });
-            destination.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                block: 'start'
-            });
+    const destination = document.getElementById('configurator');
+    if (!destination) return;
+    destination.classList.add('active');
+    document.getElementById('configPanel')?.classList.add('active');
+    requestAnimationFrame(() => {
+        destination.focus({ preventScroll: true });
+        destination.scrollIntoView({
+            behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+            block: 'start'
         });
-    }
-    if (started) {
-        // Already started, do nothing
-        return;
-    }
-    started = true;
-
-    // 1. Activate Button
-    const btn = document.getElementById('startBtn');
-    btn.classList.add('active');
-    btn.innerHTML = 'Ihre Reinigung zusammenstellen <span style="color:var(--color-accent)">●</span>';
-
-    // 2. Show Configurator & Hide Hero Image
-    const config = document.getElementById('configurator');
-    const panel = document.getElementById('configPanel');
-    const heroImage = document.getElementById('heroImage');
-
-    // Fade out hero image
-    if (heroImage) {
-        heroImage.style.opacity = '0';
-        setTimeout(() => {
-            heroImage.style.display = 'none';
-        }, 500);
-    }
-
-    config.classList.add('active');
-    panel.classList.add('active');
-
-    // 3. Show Header Immediately
-    setTimeout(() => {
-        document.getElementById('configHeader').classList.add('visible');
-        document.getElementById('configIcon').classList.add('visible');
-
-        const title = document.getElementById('configTitle');
-        title.textContent = 'Preis berechnen und Termin wählen';
-
-        document.getElementById('configBadge').classList.add('visible');
-        document.getElementById('badgeText').textContent = 'LIVE';
-    }, 300);
-
-    // 4. Show All Steps Quickly
-    let delayCounter = 500;
-    STEPS.forEach((step, index) => {
-        // Skip Step 3 - it appears only after category selection
-        if (step.id === 3) return;
-
-        setTimeout(() => {
-            const stepEl = document.getElementById(`step${step.id}`);
-            if (!stepEl) return;
-
-            stepEl.classList.add('visible');
-
-            // Show Label
-            const label = document.getElementById(`label${step.id}`);
-            if (label && step.label) {
-                label.textContent = step.label;
-                label.classList.add('visible');
-            }
-
-            // Show Number
-            const num = document.getElementById(`num${step.id}`);
-            if (num) num.classList.add('visible');
-
-            // Show Items
-            const internalElements = stepEl.querySelectorAll('.config-chip, .config-num-item, .config-select-wrap');
-            internalElements.forEach((el, i) => {
-                setTimeout(() => {
-                    el.classList.add('visible');
-                }, i * 50);
-            });
-
-        }, delayCounter);
-        delayCounter += 200; // Much faster - 200ms between steps
     });
-
-    // 5. Show Summary
-    setTimeout(() => {
-        document.getElementById('configSummary').classList.add('visible');
-    }, delayCounter + 100);
+    if (started) return;
+    started = true;
+    const title = document.getElementById('configTitle');
+    if (title) title.textContent = 'Preis berechnen und Termin wählen';
+    document.getElementById('badgeText') && (document.getElementById('badgeText').textContent = 'LIVE');
+    document.getElementById('configHeader')?.classList.add('visible');
+    document.getElementById('configIcon')?.classList.add('visible');
+    document.getElementById('configBadge')?.classList.add('visible');
 }
 
 // Kept for backward compatibility

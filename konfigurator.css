@@ -1,0 +1,291 @@
+/* ECO Clean — Konfigurator. Baut auf den px-Tokens aus premium.css auf und
+   wird nach style.css geladen, damit die Überschreibungen unten greifen. */
+
+/* Der Rechner ist der Kern der Seite und darf nicht erst nach einem Klick
+   erscheinen. Die CTAs scrollen weiterhin hierher. */
+.configurator { display: block; opacity: 1; visibility: visible; }
+/* Der zweispaltige Rechner braucht die volle Sektionsbreite, nicht die
+   900px des alten einspaltigen Panels. */
+.px-site .configurator { max-width: none; margin-top: 34px; }
+.config-body { padding: 0; }
+.config-panel { background: transparent; box-shadow: none; overflow: visible; }
+.config-header { opacity: 1; background: #fff; border-radius: var(--cfg-radius, 12px); }
+
+.cfg-wrap { --cfg-line: #dbe3dc; --cfg-ink: #182c28; --cfg-muted: #556761; --cfg-green: #008567;
+    --cfg-soft: #eaf5ec; --cfg-radius: 12px; color: var(--cfg-ink); }
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.cfg-layout { display: grid; grid-template-columns: minmax(0, 1fr) 372px; gap: 30px; align-items: start; }
+.cfg-main { min-width: 0; display: flex; flex-direction: column; gap: 18px; }
+
+/* ── Fortschritt ─────────────────────────────────────────────────────────── */
+/* Nicht klebend: eine mitscrollende Leiste würde quer über die Karten laufen. */
+.cfg-progress { display: flex; gap: 6px; padding: 0 0 16px; }
+.cfg-progress > span { flex: 1; height: 4px; border-radius: 2px; background: #dfe7e0; overflow: hidden; }
+.cfg-progress > span::after { content: ''; display: block; height: 100%; width: 0; background: var(--cfg-green);
+    border-radius: 2px; transition: width .45s ease; }
+.cfg-progress > span.is-done::after { width: 100%; }
+
+/* ── Schritt-Karten ──────────────────────────────────────────────────────── */
+.cfg-step { border: 1px solid var(--cfg-line); border-radius: var(--cfg-radius); background: #fff;
+    padding: 24px 26px 26px; scroll-margin-top: 120px; }
+.cfg-step[hidden] { display: none; }
+.cfg-step-head { display: flex; align-items: flex-start; gap: 14px; margin-bottom: 18px; }
+.cfg-step-num { flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+    background: var(--cfg-soft); color: #10553d; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.cfg-step.is-done .cfg-step-num { background: var(--cfg-green); color: #fff; }
+.cfg-step-head h2 { font-size: 20px; letter-spacing: -.5px; line-height: 1.3; }
+.cfg-step-head p { font-size: 13px; line-height: 1.6; color: var(--cfg-muted); margin: 5px 0 0; }
+
+/* ── Chips ───────────────────────────────────────────────────────────────── */
+.cfg-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+.cfg-chip { display: inline-flex; align-items: center; gap: 9px; min-height: 46px; padding: 11px 18px;
+    border: 1px solid var(--cfg-line); border-radius: 999px; background: #fff; color: var(--cfg-ink);
+    font-size: 14px; font-weight: 500; transition: border-color .18s, background .18s, transform .18s; }
+.cfg-chip:hover { border-color: #8ec5a3; background: #f5fbf6; }
+.cfg-chip[aria-pressed="true"] { border-color: var(--cfg-green); background: var(--cfg-soft); font-weight: 600; }
+.cfg-chip[aria-pressed="true"]::before { content: '✓'; color: var(--cfg-green); font-weight: 700; }
+.cfg-chip small { font-size: 11px; font-weight: 700; letter-spacing: .4px; color: #fff; background: var(--cfg-green);
+    padding: 3px 7px; border-radius: 4px; }
+
+/* ── Kategorie-Kacheln ───────────────────────────────────────────────────── */
+.cfg-cats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.cfg-cat { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; padding: 18px 16px;
+    border: 1px solid var(--cfg-line); border-radius: 10px; background: #fff; text-align: left;
+    transition: border-color .18s, background .18s, transform .18s, box-shadow .18s; }
+.cfg-cat:hover { transform: translateY(-3px); box-shadow: 0 14px 26px #153b2d10; border-color: #8ec5a3; }
+.cfg-cat[aria-pressed="true"] { border-color: var(--cfg-green); background: var(--cfg-soft); box-shadow: inset 0 0 0 1px var(--cfg-green); }
+.cfg-cat svg { width: 32px; height: 32px; color: var(--cfg-green); margin-bottom: 6px; }
+.cfg-cat strong { font-size: 15px; font-weight: 600; }
+.cfg-cat span { font-size: 12px; line-height: 1.55; color: var(--cfg-muted); }
+.cfg-cat-count { margin-top: 8px; font-size: 11px; font-weight: 700; color: var(--cfg-green); }
+
+/* ── Produktkarten ───────────────────────────────────────────────────────── */
+.cfg-group + .cfg-group { margin-top: 26px; }
+.cfg-group > h3 { font-size: 13px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--cfg-muted); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--cfg-line); }
+.cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 14px; align-items: start; }
+.cfg-card { display: flex; flex-direction: column; border: 1px solid var(--cfg-line); border-radius: 10px;
+    background: #fff; overflow: hidden; transition: border-color .2s, box-shadow .2s, transform .2s; }
+.cfg-card:hover { transform: translateY(-2px); box-shadow: 0 16px 30px #153b2d0f; }
+.cfg-card.is-active { border-color: var(--cfg-green); box-shadow: 0 0 0 1px var(--cfg-green), 0 16px 30px #153b2d12; }
+/* Mit aufgeklappten Extras nimmt die Karte die volle Breite ein — dann steht
+   das Bild seitlich, damit die Auswahl nicht nach unten weggeschoben wird. */
+.cfg-card.is-open { grid-column: 1 / -1; display: grid; grid-template-columns: 230px minmax(0, 1fr); }
+.cfg-card.is-open .cfg-media { aspect-ratio: auto; min-height: 190px; height: 100%; }
+.cfg-card.is-open .cfg-media svg { width: 90px; height: 90px; }
+.cfg-card.is-open .cfg-extras { grid-column: 1 / -1; }
+
+.cfg-media { position: relative; aspect-ratio: 4 / 3; background: linear-gradient(150deg, #eef5ef, #dfeee3);
+    display: grid; place-items: center; overflow: hidden; }
+.cfg-media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
+.cfg-card:hover .cfg-media img { transform: scale(1.04); }
+.cfg-media svg { width: 44%; height: 44%; color: #6fa585; }
+.cfg-badge { position: absolute; top: 10px; left: 10px; z-index: 1; font-size: 9px; font-weight: 700;
+    letter-spacing: 1.1px; text-transform: uppercase; background: #fffefaee; color: #10553d;
+    padding: 6px 9px; border-radius: 4px; }
+.cfg-qty-flag { position: absolute; top: 10px; right: 10px; z-index: 1; min-width: 26px; height: 26px; padding: 0 7px;
+    border-radius: 999px; background: var(--cfg-green); color: #fff; font-size: 12px; font-weight: 700;
+    display: grid; place-items: center; font-variant-numeric: tabular-nums; }
+
+.cfg-card-body { display: flex; flex-direction: column; flex: 1; padding: 15px 15px 14px; gap: 3px; }
+.cfg-card-body h4 { font-size: 15px; font-weight: 600; line-height: 1.35; letter-spacing: -.2px; margin: 0;
+    display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.cfg-card-blurb { font-size: 12px; line-height: 1.6; color: var(--cfg-muted); margin: 0; }
+.cfg-price { margin-top: 10px; font-size: 13px; color: var(--cfg-muted); }
+.cfg-price strong { font-family: var(--font-display, inherit); font-size: 22px; font-weight: 600;
+    letter-spacing: -.8px; color: var(--cfg-ink); margin-right: 3px; }
+
+/* ── Tooltips: natives <details>, kein JS, auf dem Handy immer lesbar ────── */
+.cfg-tip { margin-top: auto; }
+.cfg-tip > summary { list-style: none; display: inline-flex; align-items: center; gap: 7px; padding: 8px 0;
+    min-height: 34px; font-size: 12px; font-weight: 600; color: var(--cfg-green); cursor: pointer; }
+.cfg-tip > summary::-webkit-details-marker { display: none; }
+.cfg-tip > summary::before { content: '?'; display: grid; place-items: center; width: 18px; height: 18px;
+    border-radius: 50%; border: 1px solid currentColor; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+.cfg-tip[open] > summary::before { content: '×'; font-size: 15px; }
+.cfg-tip > p { font-size: 12.5px; line-height: 1.65; color: #33463b; background: #f4f8f4;
+    border-left: 2px solid var(--cfg-green); border-radius: 0 6px 6px 0; padding: 11px 13px; margin: 2px 0 4px; }
+
+/* ── Mengensteuerung ─────────────────────────────────────────────────────── */
+.cfg-stepper { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px;
+    border-top: 1px solid var(--cfg-line); padding-top: 13px; }
+.cfg-stepper > span { font-size: 12px; color: var(--cfg-muted); }
+.cfg-stepper > div { display: flex; align-items: center; gap: 4px; }
+.cfg-step-btn { width: 40px; height: 40px; border-radius: 8px; border: 1px solid var(--cfg-line); background: #fff;
+    font-size: 19px; line-height: 1; color: var(--cfg-ink); display: grid; place-items: center;
+    transition: background .15s, border-color .15s; }
+.cfg-step-btn:hover:not(:disabled) { background: var(--cfg-soft); border-color: var(--cfg-green); }
+.cfg-step-btn:disabled { opacity: .35; }
+.cfg-count { min-width: 34px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+/* ── Extras pro Möbelstück ───────────────────────────────────────────────── */
+.cfg-extras { border-top: 1px solid var(--cfg-line); background: #f8fcf8; padding: 15px 15px 8px; }
+.cfg-extras > p { font-size: 12px; line-height: 1.6; color: var(--cfg-muted); margin: 4px 0 10px; }
+.cfg-unit { border: 0; padding: 0; margin: 0 0 12px; min-width: 0; }
+.cfg-unit > legend { font-size: 12px; font-weight: 700; letter-spacing: .3px; color: #10553d; padding: 0 0 7px; }
+.cfg-addon { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 4px 10px; align-items: start;
+    padding: 10px 8px; margin: 0 -8px; border-radius: 7px; cursor: pointer; min-height: 44px;
+    transition: background .15s; }
+.cfg-addon:hover { background: #eef7f0; }
+.cfg-addon:has(input:checked) { background: var(--cfg-soft); }
+.cfg-addon:has(input:disabled) { opacity: .55; cursor: default; }
+.cfg-addon input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--cfg-green); cursor: inherit; }
+.cfg-addon-name { font-size: 13.5px; font-weight: 500; line-height: 1.45; overflow-wrap: anywhere; }
+.cfg-addon-price { font-size: 13px; font-weight: 600; color: #10553d; white-space: nowrap; }
+.cfg-addon-desc { grid-column: 2 / -1; font-size: 12px; line-height: 1.55; color: var(--cfg-muted); margin: 0; }
+.cfg-addon .cfg-tip { grid-column: 2 / -1; margin: 0; }
+.cfg-addon .cfg-tip > summary { padding: 4px 0; min-height: 28px; font-size: 11.5px; }
+.cfg-addon-hint { grid-column: 2 / -1; font-size: 11px; font-weight: 700; letter-spacing: .5px; color: #b06a00;
+    text-transform: uppercase; }
+
+/* Pflichtangaben (Material, Florhöhe) — genau eine Auswahl je Gruppe. */
+.cfg-choice-group { border: 1px solid #d3e5d8; border-radius: 8px; padding: 12px 14px 4px; background: #fff; }
+.cfg-choice-group > legend { margin-left: -4px; padding: 0 6px; }
+.cfg-addon-blocked { cursor: not-allowed; opacity: .75; }
+.cfg-addon-blocked:hover { background: none; }
+.cfg-addon-blocked .cfg-addon-price { color: #8a5a00; font-weight: 700; }
+.cfg-addon-blocked .cfg-addon-name { text-decoration: line-through; text-decoration-color: #b9c6bc; }
+
+/* Kissen direkt an der Couch: eine Position mit eigener Mengensteuerung. */
+.cfg-count-row { grid-template-columns: minmax(0, 1fr) auto; cursor: default; }
+.cfg-count-row:hover { background: none; }
+.cfg-count-row.is-on { background: var(--cfg-soft); }
+.cfg-count-controls { display: flex; align-items: center; gap: 4px; }
+.cfg-count-row .cfg-step-btn { width: 34px; height: 34px; font-size: 16px; }
+.cfg-count-row .cfg-count { min-width: 26px; font-size: 15px; }
+.cfg-count-row .cfg-addon-desc, .cfg-count-row .cfg-tip { grid-column: 1 / -1; }
+
+/* ── Cross-Sell ──────────────────────────────────────────────────────────── */
+.cfg-suggest { border: 1px dashed #8ec5a3; border-radius: 10px; background: #f4fbf5; padding: 16px 18px; }
+.cfg-suggest[hidden] { display: none; }
+.cfg-suggest > strong { display: block; font-size: 13px; margin-bottom: 4px; }
+.cfg-suggest > p { font-size: 12.5px; line-height: 1.65; color: var(--cfg-muted); margin: 0 0 12px; }
+.cfg-suggest-list { display: flex; flex-wrap: wrap; gap: 9px; }
+.cfg-suggest-btn { display: inline-flex; align-items: center; gap: 9px; min-height: 42px; padding: 9px 15px;
+    border: 1px solid #a9d5b8; border-radius: 999px; background: #fff; font-size: 13px; font-weight: 500;
+    transition: background .15s, border-color .15s; }
+.cfg-suggest-btn:hover { background: var(--cfg-soft); border-color: var(--cfg-green); }
+.cfg-suggest-btn b { color: #10553d; font-weight: 700; }
+
+/* ── Formularfelder ──────────────────────────────────────────────────────── */
+.cfg-field { display: block; margin-bottom: 13px; }
+.cfg-field > span { display: block; font-size: 12px; font-weight: 600; color: var(--cfg-muted); margin-bottom: 6px; }
+.cfg-input, .cfg-select, .cfg-textarea { width: 100%; min-height: 48px; padding: 12px 14px; font-size: 15px;
+    border: 1px solid var(--cfg-line); border-radius: 8px; background: #fff; color: var(--cfg-ink); }
+.cfg-textarea { min-height: 84px; resize: vertical; }
+.cfg-input:focus, .cfg-select:focus, .cfg-textarea:focus { outline: 2px solid var(--cfg-green); outline-offset: 1px; border-color: var(--cfg-green); }
+.cfg-input[aria-invalid="true"] { border-color: #b3261e; background: #fff6f5; }
+.cfg-row { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 12px; }
+.cfg-error { font-size: 12px; color: #b3261e; margin: -8px 0 12px; }
+.cfg-error[hidden] { display: none; }
+
+/* ── Hinweis-Boxen ───────────────────────────────────────────────────────── */
+.cfg-note { display: flex; gap: 11px; font-size: 12.5px; line-height: 1.65; color: #33463b; background: #f4f8f4;
+    border-radius: 8px; padding: 13px 15px; margin-top: 14px; }
+.cfg-note[hidden] { display: none; }
+.cfg-note > span:first-child { flex-shrink: 0; font-size: 15px; }
+.cfg-note-warn { background: #fff8ec; color: #6a4a05; }
+.cfg-placeholder { border: 1px dashed var(--cfg-line); border-radius: 10px; background: #fbfcfa;
+    padding: 26px; text-align: center; font-size: 13px; line-height: 1.7; color: var(--cfg-muted); }
+
+/* ── Preisleiste ─────────────────────────────────────────────────────────── */
+.cfg-rail { position: sticky; top: 104px; border: 1px solid var(--cfg-line); border-radius: var(--cfg-radius);
+    background: #fff; overflow: hidden; box-shadow: 0 20px 40px #234e3010; }
+.cfg-rail-top { background: #053c32; color: #fff; padding: 20px 22px 18px; }
+.cfg-rail-top > span { display: block; font-size: 10px; font-weight: 600; letter-spacing: 1.6px;
+    text-transform: uppercase; color: #a9d3c2; margin-bottom: 8px; }
+.cfg-total { font-family: var(--font-display, inherit); font-size: 42px; font-weight: 600; letter-spacing: -2px;
+    line-height: 1; font-variant-numeric: tabular-nums; }
+.cfg-total-note { font-size: 11px; line-height: 1.6; color: #a9d3c2; margin: 9px 0 0; }
+.cfg-rail-body { padding: 18px 22px 22px; max-height: min(52vh, 560px); overflow-y: auto; scrollbar-width: thin; }
+
+.cfg-lines { list-style: none; margin: 0 0 14px; padding: 0; }
+.cfg-lines > li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px; align-items: baseline;
+    font-size: 13px; padding: 8px 0; border-bottom: 1px solid #eef2ee; }
+.cfg-lines > li.is-addon { font-size: 12px; color: var(--cfg-muted); padding-left: 14px; border-bottom-color: #f6f8f6; }
+.cfg-lines > li.is-addon::before { content: '↳'; position: absolute; margin-left: -14px; color: #9ab3a2; }
+.cfg-lines > li { position: relative; }
+.cfg-line-price { font-weight: 600; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.cfg-line-drop { border: 0; background: none; color: #90a596; font-size: 17px; line-height: 1; width: 26px; height: 26px;
+    border-radius: 50%; }
+.cfg-line-drop:hover { background: #fdeceb; color: #b3261e; }
+.cfg-empty { font-size: 13px; line-height: 1.7; color: var(--cfg-muted); margin: 0 0 14px; }
+
+.cfg-sums { font-size: 13px; }
+.cfg-sums > div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; }
+.cfg-sums > div[hidden] { display: none; }
+.cfg-sums strong { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.cfg-sums .cfg-sum-plus strong { color: #10553d; }
+.cfg-sums .cfg-sum-minus strong { color: #0a7b3f; }
+.cfg-sums-total { border-top: 1px solid var(--cfg-line); margin-top: 8px; padding-top: 12px !important;
+    font-size: 15px; font-weight: 700; }
+/* Der bestätigte Termin ist Teil der Buchung — er gehört sichtbar zur Summe. */
+.cfg-sum-slot { background: var(--cfg-soft); border-radius: 7px; padding: 9px 11px !important; margin-top: 6px; }
+.cfg-sum-slot strong { color: #10553d; }
+
+.cfg-minbar { margin: 14px 0 4px; }
+.cfg-minbar[hidden] { display: none; }
+.cfg-minbar > p { font-size: 12px; line-height: 1.55; color: var(--cfg-muted); margin: 0 0 7px; }
+.cfg-minbar-track { height: 7px; border-radius: 4px; background: #e6ece7; overflow: hidden; }
+.cfg-minbar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #14b58d, #008567);
+    transition: width .45s ease; }
+.cfg-minbar.is-reached .cfg-minbar-fill { background: #008567; }
+
+.cfg-rail-cta { display: block; width: 100%; min-height: 54px; margin-top: 16px; padding: 15px 20px;
+    border: 0; border-radius: 8px; background: var(--cfg-green); color: #fff; font-size: 15px; font-weight: 600;
+    transition: background .18s, transform .18s; }
+.cfg-rail-cta:hover:not(:disabled) { background: #006f56; transform: translateY(-2px); }
+.cfg-rail-cta:disabled { background: #b6c9bf; }
+.cfg-rail-actions { display: flex; gap: 8px; margin-top: 10px; }
+.cfg-rail-actions > button { flex: 1; min-height: 42px; padding: 10px; border: 1px solid var(--cfg-line);
+    border-radius: 7px; background: #fff; font-size: 12.5px; color: var(--cfg-muted); }
+.cfg-rail-actions > button:hover { border-color: var(--cfg-green); color: var(--cfg-green); }
+.cfg-rail-legal { font-size: 11px; line-height: 1.65; color: var(--cfg-muted); margin: 12px 0 0; }
+
+/* ── Mobile Preisleiste ──────────────────────────────────────────────────── */
+.cfg-bar { display: none; position: fixed; inset: auto 0 0; z-index: 60; align-items: center; gap: 12px;
+    padding: 11px 18px calc(11px + env(safe-area-inset-bottom)); background: #053c32ee; color: #fff;
+    backdrop-filter: blur(14px); }
+.cfg-bar > div { flex: 1; min-width: 0; }
+.cfg-bar strong { display: block; font-size: 22px; font-weight: 700; letter-spacing: -.8px; font-variant-numeric: tabular-nums; }
+.cfg-bar span { display: block; font-size: 11px; color: #a9d3c2; }
+.cfg-bar > button { flex-shrink: 0; min-height: 46px; padding: 12px 20px; border: 0; border-radius: 8px;
+    background: #aff1c3; color: #063f30; font-size: 14px; font-weight: 700; }
+
+/* ── Responsiv ───────────────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+    .cfg-layout { grid-template-columns: 1fr; }
+    .cfg-rail { position: static; }
+    .cfg-rail-body { max-height: none; }
+    .cfg-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+    .cfg-step { padding: 20px 16px 22px; }
+    .cfg-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .cfg-card-body { padding: 12px; }
+    .cfg-card-body h4 { font-size: 14px; }
+    .cfg-media { aspect-ratio: 3 / 2; }
+    .cfg-card.is-open { grid-template-columns: 1fr; }
+    .cfg-card.is-open .cfg-media { aspect-ratio: 3 / 1; min-height: 0; }
+    .cfg-price strong { font-size: 19px; }
+    .cfg-stepper { flex-direction: column; align-items: stretch; gap: 8px; }
+    .cfg-stepper > div { justify-content: space-between; }
+    .cfg-row { grid-template-columns: 1fr; }
+    .cfg-bar { display: flex; }
+    .cfg-wrap { padding-bottom: 84px; }
+    .cfg-rail-top { padding: 18px; }
+    .cfg-rail-body { padding: 16px 18px 20px; }
+}
+
+/* ── Bewegung & Druck ────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+    .cfg-wrap *, .cfg-wrap *::before, .cfg-wrap *::after { transition: none !important; animation: none !important; }
+}
+@media print {
+    .px-header, .cfg-bar, .cfg-progress, .cfg-rail-cta, .cfg-rail-actions,
+    .cfg-suggest, .cfg-step-btn, .px-footer { display: none !important; }
+    .cfg-layout { grid-template-columns: 1fr; }
+    .cfg-rail { box-shadow: none; }
+    .cfg-step { break-inside: avoid; }
+}

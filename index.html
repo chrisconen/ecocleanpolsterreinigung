@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="booking-calender.css">
     <link rel="stylesheet" href="booking-response.css">
     <link rel="stylesheet" href="premium.css?v=booking-53785ec5">
+    <link rel="stylesheet" href="konfigurator.css?v=konfigurator-2026-09">
     <meta name="description"
         content="Professionelle Polster- und Matratzenreinigung in Österreich. Sofa, Sessel und Matratzen direkt bei Ihnen reinigen lassen. Standort wählen und Gesamtpreis berechnen.">
     <link rel="canonical" href="https://ecocleanpolsterreinigung.at/">
@@ -564,243 +565,231 @@
                             </div>
                         </div>
 
-                        <div class="config-body">
-                            <div class="config-step" id="step1">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num1">1</div>
-                                    <span class="config-step-label" id="label1"></span>
-                                </div>
-                                <div class="config-chips" id="chips1"></div>
+                        <div class="config-body cfg-wrap">
+                            <div class="cfg-progress" id="cfgProgress" role="presentation">
+                                <span></span><span></span><span></span><span></span><span></span><span></span>
                             </div>
 
-                            <div class="config-step" id="step2">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num2">2</div>
-                                    <span class="config-step-label" id="label2"></span>
-                                </div>
-                                <div class="config-chips" id="chips2"></div>
-                            </div>
+                            <div class="cfg-layout">
+                                <div class="cfg-main">
 
-                            <div class="config-step" id="step3" style="display: none;">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num3">3</div>
-                                    <span class="config-step-label" id="label3"></span>
-                                </div>
-                                <div class="config-numbers" id="numbers3"></div>
-                            </div>
-
-                            <div class="config-step" id="step4">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num4">4</div>
-                                    <span class="config-step-label" id="label4"></span>
-                                </div>
-                                <div class="config-chips" id="chips4"></div>
-                            </div>
-
-                            <div class="config-step" id="step5">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num5">5</div>
-                                    <span class="config-step-label" id="label5"></span>
-                                </div>
-                                <div class="config-select-wrap" id="select5">
-                                    <select class="config-select" onchange="handleLocationChange(this)">
-                                        <option value="">Bundesland / Stadt auswählen...</option>
-                                        <optgroup label="Wien">
-                                            <option value="wien">Wien</option>
-                                        </optgroup>
-                                        <optgroup label="Burgenland">
-                                            <option value="eisenstadt">Eisenstadt</option>
-                                            <option value="oberwart">Oberwart</option>
-                                            <option value="neusiedl-am-see">Neusiedl am See</option>
-                                            <option value="mattersburg">Mattersburg</option>
-                                            <option value="kittsee">Kittsee</option>
-                                            <option value="parndorf">Parndorf</option>
-                                        </optgroup>
-                                        <optgroup label="Niederösterreich">
-                                            <option value="wiener-neustadt">Wiener Neustadt</option>
-                                            <option value="st-poelten">St. Pölten</option>
-                                            <option value="baden">Baden</option>
-                                            <option value="krems">Krems</option>
-                                            <option value="moedling">Mödling</option>
-                                            <option value="klosterneuburg">Klosterneuburg</option>
-                                            <option value="amstetten">Amstetten</option>
-                                            <option value="schwechat">Schwechat</option>
-                                            <option value="tulln">Tulln</option>
-                                            <option value="stockerau">Stockerau</option>
-                                            <option value="korneuburg">Korneuburg</option>
-                                            <option value="neunkirchen">Neunkirchen</option>
-                                        </optgroup>
-                                        <optgroup label="Steiermark">
-                                            <option value="graz">Graz</option>
-                                            <option value="leoben">Leoben</option>
-                                            <option value="kapfenberg">Kapfenberg</option>
-                                            <option value="bruck-an-der-mur">Bruck an der Mur</option>
-                                            <option value="leibnitz">Leibnitz</option>
-                                            <option value="weiz">Weiz</option>
-                                            <option value="feldbach">Feldbach</option>
-                                            <option value="judenburg">Judenburg</option>
-                                        </optgroup>
-                                        <optgroup label="Oberösterreich">
-                                            <option value="linz">Linz</option>
-                                            <option value="wels">Wels</option>
-                                            <option value="steyr">Steyr</option>
-                                            <option value="leonding">Leonding</option>
-                                            <option value="traun">Traun</option>
-                                            <option value="gmunden">Gmunden</option>
-                                            <option value="braunau">Braunau</option>
-                                            <option value="ried-im-innkreis">Ried im Innkreis</option>
-                                        </optgroup>
-                                        <optgroup label="Salzburg">
-                                            <option value="salzburg">Salzburg</option>
-                                            <option value="hallein">Hallein</option>
-                                            <option value="wals-siezenheim">Wals-Siezenheim</option>
-                                            <option value="saalfelden">Saalfelden</option>
-                                        </optgroup>
-                                        <optgroup label="Kärnten">
-                                            <option value="klagenfurt">Klagenfurt</option>
-                                            <option value="villach">Villach</option>
-                                            <option value="wolfsberg">Wolfsberg</option>
-                                            <option value="spittal-an-der-drau">Spittal an der Drau</option>
-                                        </optgroup>
-                                        <optgroup label="Tirol">
-                                            <option value="innsbruck">Innsbruck</option>
-                                            <option value="kufstein">Kufstein</option>
-                                            <option value="hall-in-tirol">Hall in Tirol</option>
-                                            <option value="woergl">Wörgl</option>
-                                            <option value="schwaz">Schwaz</option>
-                                            <option value="telfs">Telfs</option>
-                                        </optgroup>
-                                        <optgroup label="Vorarlberg">
-                                            <option value="bregenz">Bregenz</option>
-                                            <option value="dornbirn">Dornbirn</option>
-                                            <option value="feldkirch">Feldkirch</option>
-                                            <option value="lustenau">Lustenau</option>
-                                        </optgroup>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <!-- Step 6: Exact Address -->
-                            <div class="config-step" id="step6" style="display: none;">
-                                <div class="config-step-header">
-                                    <div class="config-step-num" id="num6">6</div>
-                                    <span class="config-step-label" id="label6">Ihre genaue Adresse</span>
-                                </div>
-                                <div class="address-inputs">
-                                    <input type="text" id="street" class="config-input"
-                                        placeholder="Straße und Hausnummer *" required>
-                                    <div class="address-row">
-                                        <input type="text" id="plz" class="config-input" placeholder="PLZ *"
-                                            maxlength="4" required>
-                                        <input type="text" id="city" class="config-input" placeholder="Ort *" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Smart Booking Calendar -->
-                            <div class="config-step config-calendar-wrapper" id="calendarWrapper"
-                                style="display: none;">
-                                <div class="config-step-header">
-                                    <div class="config-step-num">📅</div>
-                                    <span class="config-step-label">Wählen Sie Ihren Wunschtermin</span>
-                                </div>
-                                <div id="bookingCalendar" data-language="de"></div>
-                            </div>
-
-                            <div class="config-summary" id="configSummary">
-                                <div class="config-summary-row">
-                                    <span class="config-summary-label">Ihre Reinigung im Überblick</span>
-                                    <span class="config-summary-price"><span id="totalPrice">0</span>€</span>
-                                </div>
-
-                                <!-- Árak bontása -->
-                                <div class="config-summary-details" id="summaryDetails">
-                                    <div class="summary-detail" id="summaryBasePrice" style="display: none;">
-                                        <span class="summary-detail-text">Möbelstücke: <strong
-                                                id="basePrice">0</strong>€</span>
-                                    </div>
-                                    <div class="summary-detail" id="summaryDiscount" style="display: none;">
-                                        <span class="summary-detail-icon">🏢</span>
-                                        <span class="summary-detail-text">Firmenrabatt:
-                                            <strong>-10%</strong></span>
-                                    </div>
-                                    <div class="config-summary-row" id="summaryAnfahrt" style="display: flex;">
-                                        <span>( 🚗 inkl. Anfahrt</span>
-                                        <span><span id="anfahrtAmount">+20</span>€ )</span>
-                                    </div>
-                                    <div class="config-summary-row" id="summaryTimingSurcharge" style="display: none;">
-                                        <span>( ⚡ inkl. Express</span>
-                                        <span><span id="timingSurchargeAmount">+15</span>€ )</span>
-                                    </div>
-                                    <div class="summary-detail" id="summaryMindest" style="display: none;">
-                                        <span class="summary-detail-icon">📦</span>
-                                        <span class="summary-detail-text">Mindestbestellwert:
-                                            <strong>199€</strong></span>
-                                    </div>
-                                    <div class="summary-detail" id="summaryDuration">
-                                        <span class="summary-detail-icon">⏱️</span>
-                                        <span class="summary-detail-text">Geschätzte Dauer: <strong id="totalDuration">0
-                                                Min.</strong></span>
-                                    </div>
-                                    <div class="summary-detail" id="summaryLocation" style="display: none;">
-                                        <span class="summary-detail-icon">📍</span>
-                                        <span class="summary-detail-text" id="locationText">Standort: -</span>
-                                    </div>
-                                    <div class="summary-detail" id="summaryTiming" style="display: none;">
-                                        <span class="summary-detail-icon">📅</span>
-                                        <span class="summary-detail-text" id="timingText">Termin: -</span>
-                                    </div>
-                                </div>
-                                <div class="config-summary-items" id="summaryItems">
-                                    <span class="config-summary-item">Noch keine Auswahl</span>
-                                </div>
-                                <div class="config-summary-row config-addon-total" id="summaryAddons" hidden>
-                                    <span>Gewählte Extras</span><strong>+<span id="addonsPrice">0</span> €</strong>
-                                </div>
-                                <div class="config-summary-row config-addon-total" id="summaryConditions" hidden>
-                                    <span>Zusatzbehandlung für Allergiker</span><strong>+<span
-                                            id="conditionPercent">0</span>%</strong>
-                                </div>
-                                <div class="config-summary-row config-addon-total" id="summaryPets" hidden>
-                                    <span>Zusatzbehandlung bei Haustieren (Matratzen, +10%)</span><strong>+<span
-                                            id="petsPrice">0</span> €</strong>
-                                </div>
-                                <div class="config-summary-row config-addon-total" id="summaryMinimumAdjustment" hidden>
-                                    <span>Ergänzung zum regionalen Mindestbestellwert (inkl. Anfahrt)</span><strong>+<span
-                                            id="minimumAdjustmentPrice">0</span> €</strong>
-                                </div>
-                                <div class="config-summary-row config-addon-total" id="summaryRounding" hidden>
-                                    <span>Rundung auf volle Euro</span><strong><span id="roundingPrice">0</span> €</strong>
-                                </div>
-
-                                <!-- Contact Fields -->
-                                <div class="config-contact">
-                                    <div class="config-contact-title">Ihre Kontaktdaten</div>
-                                    <div class="config-contact-fields">
-                                        <input type="text" id="contactName" aria-label="Ihr Name" class="config-input"
-                                            placeholder="Ihr Name *">
-                                        <input type="email" id="contactEmail" aria-label="E-Mail-Adresse"
-                                            class="config-input" placeholder="E-Mail-Adresse *">
-                                        <input type="email" id="contactEmailConfirm"
-                                            aria-label="E-Mail-Adresse bestätigen" class="config-input"
-                                            placeholder="E-Mail-Adresse wiederholen *">
-                                        <div class="email-confirm-error" id="emailConfirmError" style="display: none;">
-                                            Bitte prüfen Sie Ihre Eingabe: Die E-Mail-Adressen stimmen nicht überein.
+                                    <!-- 1 · Kundentyp -->
+                                    <section class="cfg-step" id="cfgStep1" aria-labelledby="cfgStep1Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">1</span>
+                                            <div>
+                                                <h2 id="cfgStep1Title">Privat oder Firma?</h2>
+                                                <p>Geschäftskunden erhalten 10 % Rabatt auf Möbelstücke und Extras.</p>
+                                            </div>
                                         </div>
-                                        <input type="tel" id="contactPhone" aria-label="Telefonnummer"
-                                            class="config-input" placeholder="Telefonnummer *" required>
-                                        <textarea id="contactMessage" aria-label="Ihre Nachricht"
-                                            class="config-textarea" placeholder="Nachricht (optional)"
-                                            rows="2"></textarea>
+                                        <div class="cfg-chips" id="cfgCustomer"></div>
+                                    </section>
+
+                                    <!-- 2 · Kategorien -->
+                                    <section class="cfg-step" id="cfgStep2" aria-labelledby="cfgStep2Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">2</span>
+                                            <div>
+                                                <h2 id="cfgStep2Title">Was sollen wir reinigen?</h2>
+                                                <p>Grenzt die Liste unten ein — ohne Auswahl sehen Sie alles.
+                                                    Mehrfachauswahl möglich, alles in einem Termin, Anfahrt nur einmal.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div class="cfg-cats" id="cfgCategories"></div>
+                                    </section>
+
+                                    <!-- 3 · Möbelstücke -->
+                                    <section class="cfg-step" id="cfgStep3" aria-labelledby="cfgStep3Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">3</span>
+                                            <div>
+                                                <h2 id="cfgStep3Title">Ihre Möbelstücke</h2>
+                                                <p>Zu jedem Stück entscheiden Sie einzeln, welche Zusatzbehandlung
+                                                    dazukommt. Nichts ist vorausgewählt.</p>
+                                            </div>
+                                        </div>
+                                        <div id="cfgProducts"></div>
+                                    </section>
+
+                                    <!-- Passende Ergänzungen -->
+                                    <div class="cfg-suggest" id="cfgSuggest" hidden>
+                                        <strong>Das nehmen Kundinnen und Kunden meistens dazu</strong>
+                                        <p id="cfgSuggestText"></p>
+                                        <div class="cfg-suggest-list" id="cfgSuggestList"></div>
                                     </div>
+
+                                    <!-- 4 · Besonderheiten -->
+                                    <section class="cfg-step" id="cfgStep4" aria-labelledby="cfgStep4Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">4</span>
+                                            <div>
+                                                <h2 id="cfgStep4Title">Gibt es etwas zu beachten?</h2>
+                                                <p>Optional. Ihre Hinweise steuern, welche Extras wir Ihnen oben
+                                                    vorschlagen.</p>
+                                            </div>
+                                        </div>
+                                        <div class="cfg-chips" id="cfgConditions"></div>
+                                        <p class="cfg-note" id="cfgConditionNote" hidden>
+                                            <span aria-hidden="true">ℹ️</span><span id="cfgConditionNoteText"></span>
+                                        </p>
+                                    </section>
+
+                                    <!-- 5 · Ort -->
+                                    <section class="cfg-step" id="cfgStep5" aria-labelledby="cfgStep5Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">5</span>
+                                            <div>
+                                                <h2 id="cfgStep5Title">Wo dürfen wir reinigen?</h2>
+                                                <p>Der Ort bestimmt den Mindestbestellwert und die möglichen
+                                                    Startzeiten.</p>
+                                            </div>
+                                        </div>
+                                        <label class="cfg-field">
+                                            <span>Stadt / Region</span>
+                                            <select class="cfg-select" id="location"
+                                                onchange="handleLocationChange(this)">
+                                                <option value="">Bitte auswählen …</option>
+                                            </select>
+                                        </label>
+                                        <div id="cfgAddress" hidden>
+                                            <label class="cfg-field">
+                                                <span>Straße und Hausnummer</span>
+                                                <input class="cfg-input" id="street" type="text"
+                                                    autocomplete="street-address">
+                                            </label>
+                                            <div class="cfg-row">
+                                                <label class="cfg-field">
+                                                    <span>PLZ</span>
+                                                    <input class="cfg-input" id="plz" type="text" inputmode="numeric"
+                                                        maxlength="4" autocomplete="postal-code">
+                                                </label>
+                                                <label class="cfg-field">
+                                                    <span>Ort</span>
+                                                    <input class="cfg-input" id="city" type="text"
+                                                        autocomplete="address-level2">
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <p class="cfg-note cfg-note-warn" id="cfgMinNote" hidden>
+                                            <span aria-hidden="true">📦</span><span id="cfgMinNoteText"></span>
+                                        </p>
+                                        <p class="cfg-note" id="cfgHoursNote" hidden>
+                                            <span aria-hidden="true">🕐</span><span id="cfgHoursNoteText"></span>
+                                        </p>
+                                    </section>
+
+                                    <!-- 6 · Termin und Kontakt -->
+                                    <section class="cfg-step" id="cfgStep6" aria-labelledby="cfgStep6Title">
+                                        <div class="cfg-step-head">
+                                            <span class="cfg-step-num" aria-hidden="true">6</span>
+                                            <div>
+                                                <h2 id="cfgStep6Title">Termin &amp; Kontakt</h2>
+                                                <p>Der letzte Schritt. Sie erhalten die Bestätigung sofort per E-Mail.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div class="config-calendar-wrapper" id="calendarWrapper"
+                                            style="display: none;">
+                                            <div id="bookingCalendar" data-language="de"></div>
+                                        </div>
+
+                                        <label class="cfg-field">
+                                            <span>Ihr Name</span>
+                                            <input class="cfg-input" id="contactName" type="text" autocomplete="name">
+                                        </label>
+                                        <label class="cfg-field">
+                                            <span>E-Mail-Adresse</span>
+                                            <input class="cfg-input" id="contactEmail" type="email"
+                                                autocomplete="email">
+                                        </label>
+                                        <label class="cfg-field">
+                                            <span>E-Mail-Adresse wiederholen</span>
+                                            <input class="cfg-input" id="contactEmailConfirm" type="email"
+                                                autocomplete="email">
+                                        </label>
+                                        <p class="cfg-error" id="emailConfirmError" style="display: none;">Die beiden
+                                            E-Mail-Adressen stimmen nicht überein.</p>
+                                        <label class="cfg-field">
+                                            <span>Telefonnummer</span>
+                                            <input class="cfg-input" id="contactPhone" type="tel" autocomplete="tel">
+                                        </label>
+                                        <label class="cfg-field">
+                                            <span>Nachricht (optional)</span>
+                                            <textarea class="cfg-textarea" id="contactMessage"
+                                                placeholder="Zum Beispiel: Stockwerk ohne Lift, Parkmöglichkeit, besondere Flecken …"></textarea>
+                                        </label>
+                                    </section>
                                 </div>
 
-                                <button class="config-cta" id="submitBtn" onclick="submitForm()">
-                                    <span class="cta-text">Termin jetzt buchen</span>
-                                    <span class="cta-loading" style="display: none;">Wird gesendet...</span>
-                                </button>
-                                <p class="config-privacy">Mit dem Absenden stimmen Sie unserer <a
-                                        href="#">Datenschutzerklärung</a> zu.</p>
+                                <!-- Preisleiste -->
+                                <aside class="cfg-rail" id="configSummary" aria-label="Ihre Zusammenstellung">
+                                    <div class="cfg-rail-top">
+                                        <span>Ihr Preis</span>
+                                        <div class="cfg-total" id="cfgTotal" aria-live="polite">0 €</div>
+                                        <p class="cfg-total-note" id="cfgTotalNote"></p>
+                                    </div>
+                                    <div class="cfg-rail-body">
+                                        <p class="cfg-empty" id="cfgEmpty">Noch nichts ausgewählt. Sobald Sie ein
+                                            Möbelstück hinzufügen, sehen Sie hier jede einzelne Position.</p>
+                                        <ul class="cfg-lines" id="cfgLines"></ul>
+
+                                        <div class="cfg-sums">
+                                            <div id="cfgSumBase" hidden><span>Möbelstücke</span><strong></strong></div>
+                                            <div id="cfgSumAddons" class="cfg-sum-plus" hidden><span>Gewählte
+                                                    Extras</span><strong></strong></div>
+                                            <div id="cfgSumDiscount" class="cfg-sum-minus"
+                                                hidden><span>Firmenrabatt</span><strong></strong></div>
+                                            <div id="cfgSumCondition" class="cfg-sum-plus" hidden><span>Zusatzbehandlung
+                                                    für Allergiker</span><strong></strong></div>
+                                            <div id="cfgSumPets" class="cfg-sum-plus" hidden><span>Haustiere
+                                                    (Matratzen, 10 %)</span><strong></strong></div>
+                                            <div id="cfgSumTravel" class="cfg-sum-plus" hidden><span>Anfahrt (einmal pro
+                                                    Termin)</span><strong></strong></div>
+                                            <div id="cfgSumMinimum" class="cfg-sum-plus" hidden><span>Ergänzung zum
+                                                    Mindestbestellwert</span><strong></strong></div>
+                                            <div id="cfgSumRounding" hidden><span>Rundung auf volle
+                                                    Euro</span><strong></strong></div>
+                                            <div id="cfgSumTotal" class="cfg-sums-total"><span>Endpreis</span><strong>0
+                                                    €</strong></div>
+                                            <div><span>Geschätzte Arbeitsdauer</span><strong id="cfgDuration">—</strong>
+                                            </div>
+                                            <div id="cfgSumAppointment" class="cfg-sum-slot" hidden><span>Ihr
+                                                    Termin</span><strong></strong></div>
+                                        </div>
+
+                                        <div class="cfg-minbar" id="cfgMinBar" hidden>
+                                            <p id="cfgMinText"></p>
+                                            <div class="cfg-minbar-track">
+                                                <div class="cfg-minbar-fill" id="cfgMinFill"></div>
+                                            </div>
+                                        </div>
+
+                                        <button type="button" class="cfg-rail-cta" id="submitBtn" onclick="submitForm()"
+                                            disabled>
+                                            <span class="cta-text">Termin jetzt buchen</span>
+                                            <span class="cta-loading" style="display: none;">Wird gesendet…</span>
+                                        </button>
+                                        <div class="cfg-rail-actions">
+                                            <button type="button" id="cfgPrint">Als PDF speichern</button>
+                                            <button type="button" id="cfgReset">Zurücksetzen</button>
+                                        </div>
+                                        <p class="cfg-rail-legal">Der angezeigte Betrag ist ein kalkulierter Festpreis
+                                            auf Basis Ihrer Angaben. Stellt sich vor Ort heraus, dass ein Material mit
+                                            unserer Technik nicht gereinigt werden kann, sagen wir es Ihnen, bevor wir
+                                            beginnen. Ihre Angaben verwenden wir ausschließlich für diese Anfrage.</p>
+                                    </div>
+                                </aside>
+                            </div>
+
+                            <!-- Preisleiste für schmale Bildschirme -->
+                            <div class="cfg-bar">
+                                <div>
+                                    <strong id="cfgBarTotal">0 €</strong>
+                                    <span id="cfgBarNote">Noch keine Auswahl</span>
+                                </div>
+                                <button type="button" id="cfgBarCta">Weiter</button>
                             </div>
                         </div>
                     </div>
@@ -1006,7 +995,8 @@
         </div>
     </dialog>
     <script src="booking-calendar.js?v=copy-20260908" defer></script>
-    <script src="premium-booking.js?v=booking-53785ec5" defer></script>
+    <script src="booking-catalog.js?v=konfigurator-2026-09" defer></script>
+    <script src="premium-booking.js?v=konfigurator-2026-09" defer></script>
     <script src="premium.js?v=copy-20260908" defer></script>
 </body>
 
