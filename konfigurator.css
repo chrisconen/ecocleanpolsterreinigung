@@ -68,7 +68,12 @@ html, body.px-site, .config-body { overflow-x: clip; }
 .cfg-group + .cfg-group { margin-top: 26px; }
 .cfg-group > h3 { font-size: 13px; font-weight: 600; letter-spacing: 1.4px; text-transform: uppercase;
     color: var(--cfg-muted); margin: 0 0 14px; padding-bottom: 10px; border-bottom: 1px solid var(--cfg-line); }
-.cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 14px; align-items: start; }
+/* Wächst eine Karte (Extras klappen auf), verschiebt der Scroll-Anker des
+   Browsers sonst die ganze Seite, um Inhalt darunter festzuhalten — der Klick
+   auf "+" landete dann irgendwo weiter unten. Ohne Anker bleibt die Karte
+   genau dort stehen, wo der Zeiger ist. */
+.cfg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(228px, 1fr)); gap: 14px; align-items: start;
+    overflow-anchor: none; }
 .cfg-card { display: flex; flex-direction: column; border: 1px solid var(--cfg-line); border-radius: 10px;
     background: #fff; overflow: hidden; transition: border-color .2s, box-shadow .2s, transform .2s; }
 .cfg-card:hover { transform: translateY(-2px); box-shadow: 0 16px 30px #153b2d0f; }

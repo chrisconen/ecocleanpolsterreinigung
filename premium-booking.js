@@ -130,21 +130,27 @@ function calculateBooking(selection = state) {
 }
 
 // ── Schritt 1 und 4: Chips ──────────────────────────────────────────────────
+// Bedienelemente werden einmal gebaut und danach nur noch aktualisiert. Ein
+// Neuaufbau bei jedem Klick nimmt dem Knopf den Fokus und lässt die Seite unter
+// dem Zeiger springen, weil der Browser dabei seinen Scroll-Anker verliert.
 function buildChips(container, items, isSelected, onToggle) {
-    container.replaceChildren();
-    items.forEach(item => {
-        const chip = document.createElement('button');
-        chip.type = 'button';
-        chip.className = 'cfg-chip';
-        chip.append(document.createTextNode(item.label));
-        if (item.badge) {
-            const badge = document.createElement('small');
-            badge.textContent = item.badge;
-            chip.append(badge);
-        }
-        chip.setAttribute('aria-pressed', String(isSelected(item)));
-        chip.addEventListener('click', () => { onToggle(item); renderAll(); });
-        container.append(chip);
+    if (!container.children.length) {
+        items.forEach(item => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'cfg-chip';
+            chip.append(document.createTextNode(item.label));
+            if (item.badge) {
+                const badge = document.createElement('small');
+                badge.textContent = item.badge;
+                chip.append(badge);
+            }
+            chip.addEventListener('click', () => { onToggle(item); renderShell(); });
+            container.append(chip);
+        });
+    }
+    items.forEach((item, index) => {
+        container.children[index].setAttribute('aria-pressed', String(isSelected(item)));
     });
 }
 
@@ -172,29 +178,29 @@ function renderConditions() {
 // ── Schritt 2: Kategorien ───────────────────────────────────────────────────
 function renderCategories() {
     const container = $('cfgCategories');
-    container.replaceChildren();
-    C.CATEGORIES.forEach(category => {
-        const chosen = state.categories.includes(category.id);
-        const count = C.PRODUCTS.filter(product => product.category === category.id)
-            .reduce((sum, product) => sum + quantityOf(product.name), 0);
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'cfg-cat';
-        button.setAttribute('aria-pressed', String(chosen));
-        button.innerHTML = svg(category.id);
-        const title = document.createElement('strong');
-        title.textContent = category.label;
-        const desc = document.createElement('span');
-        desc.textContent = category.desc;
-        button.append(title, desc);
-        if (count) {
+    if (!container.children.length) {
+        C.CATEGORIES.forEach(category => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'cfg-cat';
+            button.innerHTML = svg(category.id);
+            const title = document.createElement('strong');
+            title.textContent = category.label;
+            const desc = document.createElement('span');
+            desc.textContent = category.desc;
             const badge = document.createElement('span');
             badge.className = 'cfg-cat-count';
-            badge.textContent = `${count} ausgewählt`;
-            button.append(badge);
-        }
-        button.addEventListener('click', () => toggleCategory(category.id));
-        container.append(button);
+            button.append(title, desc, badge);
+            button.addEventListener('click', () => toggleCategory(category.id));
+            container.append(button);
+        });
+    }
+    C.CATEGORIES.forEach((category, index) => {
+        const button = container.children[index];
+        const count = C.PRODUCTS.filter(product => product.category === category.id)
+            .reduce((sum, product) => sum + quantityOf(product.name), 0);
+        button.setAttribute('aria-pressed', String(state.categories.includes(category.id)));
+        button.querySelector('.cfg-cat-count').textContent = count ? `${count} ausgewählt` : '';
     });
 }
 
@@ -235,6 +241,7 @@ function renderProducts() {
 function buildCard(product) {
     const quantity = quantityOf(product.name);
     const card = document.createElement('article');
+    card.dataset.product = product.name;
     card.className = 'cfg-card' + (quantity ? ' is-active' : '');
     if (quantity && C.hasAddons(product.name)) card.classList.add('is-open');
 
@@ -284,14 +291,16 @@ function buildCard(product) {
     const label = document.createElement('span');
     label.textContent = 'Anzahl';
     const controls = document.createElement('div');
-    const minus = stepButton('−', `${product.name}: Anzahl verringern`, () => changeQty(product.name, -1));
+    const minus = stepButton('−', `${product.name}: Anzahl verringern`,
+        () => changeQty(product.name, -1), `qty-${product.ui.id}-minus`);
     minus.disabled = quantity === 0;
     const count = document.createElement('span');
     count.className = 'cfg-count';
     count.textContent = String(quantity);
     count.setAttribute('aria-live', 'polite');
     count.setAttribute('aria-label', `${product.name}: ${quantity} Stück`);
-    controls.append(minus, count, stepButton('+', `${product.name}: Anzahl erhöhen`, () => changeQty(product.name, 1)));
+    controls.append(minus, count, stepButton('+', `${product.name}: Anzahl erhöhen`,
+        () => changeQty(product.name, 1), `qty-${product.ui.id}-plus`));
     stepper.append(label, controls);
     body.append(stepper);
     card.append(media, body);
@@ -300,12 +309,13 @@ function buildCard(product) {
     return card;
 }
 
-function stepButton(glyph, label, onClick) {
+function stepButton(glyph, label, onClick, focusKey) {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'cfg-step-btn';
     button.textContent = glyph;
     button.setAttribute('aria-label', label);
+    if (focusKey) button.dataset.fk = focusKey;
     button.addEventListener('click', onClick);
     return button;
 }
@@ -321,6 +331,39 @@ function buildTip(summaryText, bodyText) {
     return details;
 }
 
+// Nach dem Neubau einer Karte soll derselbe Knopf wieder den Fokus haben.
+function refreshCard(name) {
+    const card = document.querySelector(`#cfgProducts .cfg-card[data-product="${CSS.escape(name)}"]`);
+    if (!card) { renderProducts(); return; }
+    const key = document.activeElement?.dataset?.fk || null;
+    card.replaceWith(buildCard(C.getProduct(name)));
+    if (key) {
+        // preventScroll: der Knopf ist noch sichtbar, ein Nachscrollen wäre der Sprung.
+        document.querySelector(`#cfgProducts [data-fk="${CSS.escape(key)}"]`)?.focus({ preventScroll: true });
+    }
+}
+
+// Alles ausser der Produktliste. Die Liste wird nur neu gebaut, wenn sich ihr
+// Inhalt wirklich ändert (Kategoriefilter), nicht bei jeder Mengenänderung.
+function renderShell() {
+    const quote = calculateBooking();
+    // Abgeleitetes Label für die Buchungsdaten und die Badges.
+    const used = C.CATEGORIES.filter(category =>
+        C.PRODUCTS.some(product => product.category === category.id && quantityOf(product.name) > 0));
+    state.serviceType = used.map(category => category.label).join(' + ') || null;
+
+    renderCustomerType();
+    renderCategories();
+    renderConditions();
+    renderSuggestions();
+    renderLocationNotes();
+    renderRail(quote);
+    renderProgress(quote);
+    updateHeroBadges();
+    saveState();
+    syncCalendarDuration(quote);
+}
+
 function changeQty(name, delta) {
     const next = Math.max(0, Math.min(99, quantityOf(name) + delta));
     if (next === 0) {
@@ -332,7 +375,11 @@ function changeQty(name, delta) {
         // Entfernte Stücke nehmen ihre Extras mit — sie dürfen nicht zurückkommen.
         state.couchAddons[name] = Array.from({ length: next }, (unused, index) => units[index] || []);
     }
-    renderAll();
+    refreshCard(name);
+    // Die Kissenzeile sitzt an der Couch, die Kissen sind ein eigenes Produkt —
+    // beide Karten müssen denselben Stand zeigen.
+    if (name === PILLOW_PRODUCT) PILLOW_HOSTS.filter(host => quantityOf(host) > 0).forEach(refreshCard);
+    renderShell();
 }
 
 // ── Extras ──────────────────────────────────────────────────────────────────
@@ -361,7 +408,7 @@ function buildExtras(product, quantity) {
         available.filter(addon => !addon.group).forEach(addon => {
             fieldset.append(buildAddonRow(product, addon, unitIndex, perUnit, quantity));
         });
-        if (PILLOW_HOSTS.includes(product.name) && unitIndex === 0) fieldset.append(buildPillowRow());
+        if (PILLOW_HOSTS.includes(product.name) && unitIndex === 0) fieldset.append(buildPillowRow(product));
         wrapper.append(fieldset);
     });
     const note = document.createElement('p');
@@ -393,6 +440,7 @@ function buildChoiceGroup(product, groupId, addons, unitIndex, perUnit, quantity
         const input = document.createElement('input');
         input.type = 'radio';
         input.name = radioName;
+        input.dataset.fk = `choice-${radioName}-${id || 'base'}`;
         input.checked = (active?.id || null) === id;
         input.addEventListener('change', () => selectChoice(product, groupId, id, unitIndex, perUnit));
         const name = document.createElement('span');
@@ -447,13 +495,14 @@ function selectChoice(product, groupId, addonId, unitIndex, perUnit) {
     state.couchAddons[product.name] = perUnit
         ? units.map((entry, index) => (index === unitIndex ? apply(entry || []) : entry || []))
         : units.map(entry => apply(entry || []));
-    renderAll();
+    refreshCard(product.name);
+    renderShell();
 }
 
 // Kissen werden dort angeboten, wo sie liegen — an der Couch. Gebucht wird
 // dabei die reguläre Position „Zierkissen", damit Buchungsdaten und Tarif
 // unverändert bleiben.
-function buildPillowRow() {
+function buildPillowRow(host) {
     const product = C.getProduct(PILLOW_PRODUCT);
     const quantity = quantityOf(PILLOW_PRODUCT);
     const row = document.createElement('div');
@@ -463,12 +512,14 @@ function buildPillowRow() {
     name.textContent = 'Kissen mitreinigen, die nicht in die Waschmaschine passen';
     const controls = document.createElement('span');
     controls.className = 'cfg-count-controls';
-    const minus = stepButton('−', 'Kissen: Anzahl verringern', () => changeQty(PILLOW_PRODUCT, -1));
+    const minus = stepButton('−', 'Kissen: Anzahl verringern',
+        () => changeQty(PILLOW_PRODUCT, -1), `pillow-${host.ui.id}-minus`);
     minus.disabled = quantity === 0;
     const value = document.createElement('span');
     value.className = 'cfg-count';
     value.textContent = String(quantity);
-    controls.append(minus, value, stepButton('+', 'Kissen: Anzahl erhöhen', () => changeQty(PILLOW_PRODUCT, 1)));
+    controls.append(minus, value, stepButton('+', 'Kissen: Anzahl erhöhen',
+        () => changeQty(PILLOW_PRODUCT, 1), `pillow-${host.ui.id}-plus`));
     const desc = document.createElement('p');
     desc.className = 'cfg-addon-desc';
     desc.textContent = `${product.price} € pro Kissen · ${quantity ? `derzeit ${quantity} Stück, ` : ''}erscheint als eigene Position in der Übersicht.`;
@@ -486,6 +537,7 @@ function buildAddonRow(product, addon, unitIndex, perUnit, quantity) {
     label.className = 'cfg-addon';
     const input = document.createElement('input');
     input.type = 'checkbox';
+    input.dataset.fk = `addon-${product.ui.id}-${unitIndex}-${addon.id}`;
     input.checked = selected.includes(addon.id);
     input.disabled = blockedByIntensive;
     input.setAttribute('aria-label',
@@ -529,7 +581,8 @@ function toggleAddon(product, addonId, unitIndex, perUnit, checked) {
     state.couchAddons[product.name] = perUnit
         ? units.map((entry, index) => (index === unitIndex ? apply(entry || []) : entry || []))
         : units.map(entry => apply(entry || []));
-    renderAll();
+    refreshCard(product.name);
+    renderShell();
 }
 
 // ── Cross-Selling ───────────────────────────────────────────────────────────
@@ -788,24 +841,12 @@ function renderProgress(quote) {
 function updateSummary() { renderAll(); }
 
 function renderAll() {
-    const quote = calculateBooking();
-    // Abgeleitetes Label für die Buchungsdaten und die Badges.
-    const used = C.CATEGORIES.filter(category =>
-        C.PRODUCTS.some(product => product.category === category.id && quantityOf(product.name) > 0));
-    state.serviceType = used.map(category => category.label).join(' + ') || null;
-
-    renderCustomerType();
-    renderCategories();
     renderProducts();
-    renderConditions();
-    renderSuggestions();
-    renderLocationNotes();
-    renderRail(quote);
-    renderProgress(quote);
-    updateHeroBadges();
-    saveState();
+    renderShell();
+}
 
-    // Eine längere Reinigung darf keinen bereits bestätigten, kürzeren Slot behalten.
+// Eine längere Reinigung darf keinen bereits bestätigten, kürzeren Slot behalten.
+function syncCalendarDuration(quote) {
     if (typeof BookingCalendar !== 'undefined' && BookingCalendar.setRequiredDuration) {
         if (BookingCalendar.state.requiredDuration !== quote.totalDuration) {
             if (BookingCalendar.getSelectedSlot()) {
