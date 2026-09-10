@@ -832,6 +832,9 @@ function updateCartBadge(count) {
     if (!badge || !tab) return;
     badge.textContent = count;
     badge.hidden = count === 0;
+    // Ein leerer Warenkorb ist keine Information — der Reiter erscheint erst
+    // mit dem ersten Möbelstück.
+    tab.hidden = count === 0;
     if (count > cartCount) {
         tab.classList.remove('is-bump');
         void tab.offsetWidth;                 // Animation neu starten

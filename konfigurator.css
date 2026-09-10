@@ -358,6 +358,7 @@ html, body.px-site, .config-body { overflow-x: clip; }
         width: 52px; height: 62px; padding: 0; border: 0; border-radius: 0 14px 14px 0;
         background: #053c32; color: #fff; box-shadow: 0 8px 24px #0a2c2340;
         transition: opacity .25s, transform .25s; }
+    .cfg-cart-tab[hidden] { display: none; }
     .cfg-cart-tab svg { width: 23px; height: 23px; }
     .cfg-cart-count { position: absolute; top: 7px; right: 5px; display: grid; place-items: center;
         min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
