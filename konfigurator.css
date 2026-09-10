@@ -12,7 +12,10 @@
    weg. `clip` verhindert dasselbe waagrechte Überlaufen ohne diesen Nebeneffekt. */
 html, body.px-site, .config-body { overflow-x: clip; }
 .config-body { padding: 0; }
-.config-panel { background: transparent; box-shadow: none; overflow: visible; }
+/* transform: none hebt ein übrig gebliebenes scale(1) aus style.css auf. Auch
+   eine wirkungslose Transformation macht das Panel zum Bezugsrahmen für
+   position: fixed — die Warenkorb-Schublade klebte dadurch mitten im Dokument. */
+.config-panel { background: transparent; box-shadow: none; overflow: visible; transform: none; }
 .config-header { opacity: 1; background: #fff; border-radius: var(--cfg-radius, 12px); }
 
 .cfg-wrap { --cfg-line: #dbe3dc; --cfg-ink: #182c28; --cfg-muted: #556761; --cfg-green: #008567;
@@ -325,13 +328,62 @@ html, body.px-site, .config-body { overflow-x: clip; }
     background: #aff1c3; color: #063f30; font-size: 14px; font-weight: 700; }
 
 /* ── Responsiv ───────────────────────────────────────────────────────────── */
+/* ── Warenkorb-Schublade ─────────────────────────────────────────────────── */
+/* Einspaltig landete die Preisleiste unter dem Formular: der Kunde wählt seine
+   Möbelstücke und sieht davon nichts. Stattdessen wird sie zur Schublade —
+   ein Reiter am linken Rand zeigt jederzeit, wie viele Stücke drin liegen. */
+.cfg-cart-tab, .cfg-cart-backdrop, .cfg-cart-close { display: none; }
+
 @media (max-width: 1100px) {
     .cfg-layout { grid-template-columns: 1fr; }
-    /* Einspaltig steht die Leiste unter dem Formular — dann darf sie in voller
-       Länge stehen und braucht keinen eigenen Scrollbereich. */
-    .cfg-rail { position: static; max-height: none; display: block; }
-    .cfg-rail-body { overflow-y: visible; }
     .cfg-cats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .cfg-rail { --cfg-cart-w: min(400px, 92vw);
+        position: fixed; inset: 0 auto 0 0; z-index: 130;
+        display: block; width: var(--cfg-cart-w); max-height: none;
+        border: 0; border-radius: 0 16px 16px 0; box-shadow: 0 0 60px #0a2c2340;
+        overflow-y: auto; overscroll-behavior: contain;
+        transform: translateX(-101%); visibility: hidden;
+        transition: transform .34s cubic-bezier(.4, 0, .2, 1), visibility .34s; }
+    .cfg-rail-body { overflow-y: visible; }
+    .cfg-cart-open .cfg-rail { transform: none; visibility: visible; }
+    /* Die Leiste liegt im Stapelkontext von .config-body (z-index: 1) und käme
+       sonst nie über die fixierte Kopfzeile. Offen steigt der ganze Kontext. */
+    .cfg-cart-open .config-body { z-index: 140; }
+    /* Schublade offen: die Seite darunter soll nicht mitscrollen. */
+    .cfg-cart-open { overflow: hidden; }
+
+    .cfg-cart-tab { display: flex; align-items: center; justify-content: center;
+        position: fixed; left: 0; top: 50%; z-index: 120; transform: translateY(-50%);
+        width: 52px; height: 62px; padding: 0; border: 0; border-radius: 0 14px 14px 0;
+        background: #053c32; color: #fff; box-shadow: 0 8px 24px #0a2c2340;
+        transition: opacity .25s, transform .25s; }
+    .cfg-cart-tab svg { width: 23px; height: 23px; }
+    .cfg-cart-count { position: absolute; top: 7px; right: 5px; display: grid; place-items: center;
+        min-width: 20px; height: 20px; padding: 0 5px; border-radius: 10px;
+        background: #aff1c3; color: #063f30; font-size: 12px; font-weight: 700;
+        font-variant-numeric: tabular-nums; }
+    .cfg-cart-count[hidden] { display: none; }
+    .cfg-cart-tab.is-bump { animation: cfgCartBump .45s ease; }
+    .cfg-cart-open .cfg-cart-tab { opacity: 0; pointer-events: none; transform: translate(-100%, -50%); }
+
+    .cfg-cart-backdrop { display: block; position: fixed; inset: 0; z-index: 125;
+        background: #06231cbb; opacity: 0; pointer-events: none; transition: opacity .3s; }
+    .cfg-cart-open .cfg-cart-backdrop { opacity: 1; pointer-events: auto; }
+
+    /* Weiß mit dunklem Kreuz: sitzt sowohl auf dem grünen Kopf als auch auf
+       der hellen Bestätigung sichtbar. */
+    .cfg-cart-close { display: grid; place-items: center; position: fixed; z-index: 135;
+        top: 12px; left: calc(min(400px, 92vw) - 52px); width: 40px; height: 40px;
+        border: 1px solid #d9e3dc; border-radius: 50%; background: #fff; color: #053c32;
+        font-size: 24px; line-height: 1; box-shadow: 0 4px 14px #0a2c2333;
+        opacity: 0; pointer-events: none; transition: opacity .25s; }
+    .cfg-cart-open .cfg-cart-close { opacity: 1; pointer-events: auto; }
+}
+@keyframes cfgCartBump {
+    0%   { transform: translateY(-50%) scale(1); }
+    35%  { transform: translateY(-50%) scale(1.18); }
+    100% { transform: translateY(-50%) scale(1); }
 }
 @media (max-width: 620px) {
     .cfg-step { padding: 20px 16px 22px; }
@@ -361,8 +413,11 @@ html, body.px-site, .config-body { overflow-x: clip; }
     .cfg-layout:has(.cfg-rail-result) { grid-template-columns: 1fr; }
     .cfg-result-actions,
     .px-header, .cfg-bar, .cfg-progress, .cfg-rail-cta, .cfg-rail-actions,
-    .cfg-suggest, .cfg-step-btn, .px-footer { display: none !important; }
+    .cfg-suggest, .cfg-step-btn, .px-footer,
+    .cfg-cart-tab, .cfg-cart-backdrop, .cfg-cart-close { display: none !important; }
     .cfg-layout { grid-template-columns: 1fr; }
-    .cfg-rail { box-shadow: none; }
+    /* Auf Papier gibt es keine Schublade — der Beleg steht im Fluss. */
+    .cfg-rail { position: static !important; width: auto !important; transform: none !important;
+        visibility: visible !important; overflow: visible !important; box-shadow: none; }
     .cfg-step { break-inside: avoid; }
 }

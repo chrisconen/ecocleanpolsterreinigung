@@ -818,6 +818,31 @@ function renderRail(quote) {
     $('submitBtn').disabled = empty;
     $('cfgBarTotal').textContent = empty ? '0 €' : euro(quote.finalTotal);
     $('cfgBarNote').textContent = empty ? 'Noch keine Auswahl' : `${quote.itemCount} Stück · inkl. Anfahrt`;
+    updateCartBadge(quote.itemCount);
+}
+
+// ── Warenkorb-Schublade (schmale Bildschirme) ───────────────────────────────
+// Der Reiter ist auf dem Handy die einzige ständige Rückmeldung: kommt ein
+// Möbelstück dazu, springt die Zahl kurz — sonst merkt niemand, dass etwas
+// passiert ist.
+let cartCount = 0;
+function updateCartBadge(count) {
+    const badge = document.getElementById('cfgCartCount');
+    const tab = document.getElementById('cfgCartTab');
+    if (!badge || !tab) return;
+    badge.textContent = count;
+    badge.hidden = count === 0;
+    if (count > cartCount) {
+        tab.classList.remove('is-bump');
+        void tab.offsetWidth;                 // Animation neu starten
+        tab.classList.add('is-bump');
+    }
+    cartCount = count;
+}
+
+function setCart(open) {
+    document.body.classList.toggle('cfg-cart-open', open);
+    document.getElementById('cfgCartTab')?.setAttribute('aria-expanded', String(open));
 }
 
 function renderProgress(quote) {
@@ -1463,6 +1488,8 @@ function showRailPanel(kind, { title, text, rows = [], note, actions = [] }) {
     rail.append(panel);
     // Die mobile Preisleiste passt nicht mehr zum Ergebnis.
     document.querySelector('.cfg-bar')?.setAttribute('hidden', '');
+    // Als Schublade wäre das Ergebnis sonst zugeschoben.
+    if (window.matchMedia('(max-width: 1100px)').matches) setCart(true);
     rail.scrollIntoView({
         behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
         block: 'center'
@@ -1557,6 +1584,7 @@ function retryBooking() {
     rail.classList.remove('cfg-rail-result');
     rail.replaceChildren(...RAIL_TEMPLATE.cloneNode(true).childNodes);
     document.querySelector('.cfg-bar')?.removeAttribute('hidden');
+    setCart(false);
     wireRail();
     renderAll();
     document.getElementById('cfgStep6')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1705,6 +1733,10 @@ function init() {
     wireLiveValidation();
     document.getElementById('cfgBarCta')?.addEventListener('click', () =>
         document.getElementById('cfgStep6').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    document.getElementById('cfgCartTab')?.addEventListener('click', () => setCart(true));
+    document.getElementById('cfgCartClose')?.addEventListener('click', () => setCart(false));
+    document.getElementById('cfgCartBackdrop')?.addEventListener('click', () => setCart(false));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') setCart(false); });
     renderAll();
 
     // Direkteinstieg aus einer Kampagne oder von einer Unterseite.

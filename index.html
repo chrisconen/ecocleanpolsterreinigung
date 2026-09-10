@@ -17,7 +17,7 @@
     <link rel="stylesheet" href="booking-calender.css">
     <link rel="stylesheet" href="booking-response.css">
     <link rel="stylesheet" href="premium.css?v=booking-53785ec5">
-    <link rel="stylesheet" href="konfigurator.css?v=kein-sprung-1">
+    <link rel="stylesheet" href="konfigurator.css?v=warenkorb-1">
     <meta name="description"
         content="Professionelle Polster- und Matratzenreinigung in Österreich. Sofa, Sessel und Matratzen direkt bei Ihnen reinigen lassen. Standort wählen und Gesamtpreis berechnen.">
     <link rel="canonical" href="https://ecocleanpolsterreinigung.at/">
@@ -782,6 +782,23 @@
                                 </aside>
                             </div>
 
+                            <!-- Warenkorb-Schublade für schmale Bildschirme.
+                                 Reiter, Abdunkelung und Schließen liegen außerhalb der
+                                 Preisleiste, weil deren Inhalt beim Ergebnis ersetzt wird. -->
+                            <button type="button" class="cfg-cart-tab" id="cfgCartTab"
+                                aria-controls="configSummary" aria-expanded="false" aria-label="Warenkorb öffnen">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                                    <circle cx="9" cy="20" r="1.6" />
+                                    <circle cx="18" cy="20" r="1.6" />
+                                    <path d="M2 3h3l2.6 12.2h11L21 7H6" />
+                                </svg>
+                                <span class="cfg-cart-count" id="cfgCartCount" hidden>0</span>
+                            </button>
+                            <div class="cfg-cart-backdrop" id="cfgCartBackdrop"></div>
+                            <button type="button" class="cfg-cart-close" id="cfgCartClose"
+                                aria-label="Warenkorb schließen">&times;</button>
+
                             <!-- Preisleiste für schmale Bildschirme -->
                             <div class="cfg-bar">
                                 <div>
@@ -995,7 +1012,7 @@
     </dialog>
     <script src="booking-calendar.js?v=copy-20260908" defer></script>
     <script src="booking-catalog.js?v=konfigurator-2026-09" defer></script>
-    <script src="premium-booking.js?v=kein-sprung-1" defer></script>
+    <script src="premium-booking.js?v=warenkorb-1" defer></script>
     <script src="premium.js?v=copy-20260908" defer></script>
 </body>
 
