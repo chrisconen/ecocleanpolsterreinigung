@@ -239,7 +239,9 @@ html, body.px-site, .config-body { overflow-x: clip; }
 .cfg-rail-body { padding: 18px 22px 22px; flex: 1 1 auto; min-height: 0; overflow-y: auto;
     scrollbar-width: thin; overscroll-behavior: contain; }
 
-.cfg-lines { list-style: none; margin: 0 0 14px; padding: 0; }
+/* Ohne Scroll-Anker: fällt beim Löschen eine Zeile weg, hält der Browser sonst
+   den Inhalt darunter fest und schiebt dafür die Ansicht nach unten. */
+.cfg-lines { list-style: none; margin: 0 0 14px; padding: 0; overflow-anchor: none; }
 .cfg-lines > li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 4px 10px; align-items: baseline;
     font-size: 13px; padding: 8px 0; border-bottom: 1px solid #eef2ee; }
 .cfg-lines > li.is-addon { font-size: 12px; color: var(--cfg-muted); padding-left: 14px; border-bottom-color: #f6f8f6; }
@@ -348,8 +350,13 @@ html, body.px-site, .config-body { overflow-x: clip; }
     .cfg-rail-body { overflow-y: visible; }
     .cfg-cart-open .cfg-rail { transform: none; visibility: visible; }
     /* Die Leiste liegt im Stapelkontext von .config-body (z-index: 1) und käme
-       sonst nie über die fixierte Kopfzeile. Offen steigt der ganze Kontext. */
-    .cfg-cart-open .config-body { z-index: 140; }
+       sonst nie über die fixierte Kopfzeile. Offen steigt der ganze Kontext.
+       overflow-x muss dabei zurück auf visible: Safari macht ein Element mit
+       overflow: clip zum Bezugsrahmen für position: fixed, und die Schublade
+       saß dadurch um die Seitenpolsterung eingerückt statt am Bildschirmrand —
+       ihre Zeilen standen genau auf der linken Kante der Formularkarten.
+       Waagrecht scrollen kann hier nichts: der Body steht offen auf hidden. */
+    .cfg-cart-open .config-body { z-index: 140; overflow-x: visible; }
     /* Schublade offen: die Seite darunter soll nicht mitscrollen. */
     .cfg-cart-open { overflow: hidden; }
 
