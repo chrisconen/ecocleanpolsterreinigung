@@ -819,6 +819,19 @@ function renderRail(quote) {
     $('cfgBarTotal').textContent = empty ? '0 €' : euro(quote.finalTotal);
     $('cfgBarNote').textContent = empty ? 'Noch keine Auswahl' : `${quote.itemCount} Stück · inkl. Anfahrt`;
     updateCartBadge(quote.itemCount);
+    updateFormCta();
+}
+
+// ── Mobil „Weiter" gomb: aktív, ha minden kötelező mező helyes ──────────────
+function updateFormCta() {
+    const btn = document.getElementById('cfgFormCta');
+    if (!btn) return;
+    // A Termin übernehmen (Kalender) is része a validációnak.
+    if (typeof BookingCalendar !== 'undefined') {
+        state.selectedDate = BookingCalendar.getSelectedDate();
+        state.selectedSlot = BookingCalendar.getSelectedSlot();
+    }
+    btn.disabled = collectProblems().length > 0;
 }
 
 // ── Warenkorb-Schublade (schmale Bildschirme) ───────────────────────────────
@@ -1139,7 +1152,12 @@ function collectProblems() {
     if (!state.location) add('Wählen Sie Ihre Stadt oder Region aus.', 'location', 'cfgStep5');
     else {
         if (!value('street')) add('Bitte geben Sie Straße und Hausnummer an.', 'street', 'cfgStep5');
-        if (!/^\d{4}$/.test(value('plz'))) add('Die PLZ besteht aus vier Ziffern.', 'plz', 'cfgStep5');
+        if (!C.isValidPlz(value('plz'))) add('Die PLZ besteht aus vier Ziffern.', 'plz', 'cfgStep5');
+        // Eine vertippte PLZ ordnet den Termin in n8n der falschen Region zu und
+        // sperrt dort den ganzen Tag (real: 3701 statt 7301 → Cluster Linz).
+        else if (!C.plzMatchesZone(value('plz'), C.LOCATIONS[state.location]?.zone))
+            add(`Die PLZ ${value('plz')} passt nicht zu ${C.LOCATIONS[state.location]?.name}. Bitte prüfen Sie die Postleitzahl.`,
+                'plz', 'cfgStep5');
         if (!value('city')) add('Bitte geben Sie den Ort an.', 'city', 'cfgStep5');
     }
 
@@ -1207,10 +1225,11 @@ function focusProblem(problem) {
 function wireLiveValidation() {
     FIELD_ORDER.forEach(id => {
         const field = document.getElementById(id);
-        const clear = () => { if (field.getAttribute('aria-invalid') === 'true') setFieldError(id, ''); };
         // `change` deckt die Auswahlliste ab, `input` die Textfelder.
-        field?.addEventListener('input', clear);
-        field?.addEventListener('change', clear);
+        // updateFormCta() läuft immer: der „Weiter"-Knopf muss sofort reagieren.
+        const clear = () => { if (field.getAttribute('aria-invalid') === 'true') setFieldError(id, ''); };
+        field?.addEventListener('input', () => { clear(); updateFormCta(); });
+        field?.addEventListener('change', () => { clear(); updateFormCta(); });
     });
     // Die Wiederholung prüft gegen die erste Adresse, sobald beide gefüllt sind.
     const email = document.getElementById('contactEmail');
@@ -1219,6 +1238,7 @@ function wireLiveValidation() {
         if (!confirm.value.trim() || !email.value.trim()) return;
         setFieldError('contactEmailConfirm',
             confirm.value.trim() === email.value.trim() ? '' : 'Die beiden E-Mail-Adressen stimmen nicht überein.');
+        updateFormCta();
     };
     confirm?.addEventListener('blur', compare);
     email?.addEventListener('blur', compare);
@@ -1687,6 +1707,7 @@ function wireCalendar() {
         // gerade bestätigte Auswahl wieder verwerfen.
         renderAppointment(event.detail);
         renderProgress(calculateBooking());
+        updateFormCta();
     });
 }
 
@@ -1736,6 +1757,10 @@ function init() {
     wireLiveValidation();
     document.getElementById('cfgBarCta')?.addEventListener('click', () =>
         document.getElementById('cfgStep6').scrollIntoView({ behavior: 'smooth', block: 'start' }));
+    // Mobil: „Weiter" öffnet die Warenkorb-Schublade (nur wenn der Knopf aktiv ist).
+    document.getElementById('cfgFormCta')?.addEventListener('click', () => {
+        if (!document.getElementById('cfgFormCta').disabled) setCart(true);
+    });
     document.getElementById('cfgCartTab')?.addEventListener('click', () => setCart(true));
     document.getElementById('cfgCartClose')?.addEventListener('click', () => setCart(false));
     document.getElementById('cfgCartBackdrop')?.addEventListener('click', () => setCart(false));

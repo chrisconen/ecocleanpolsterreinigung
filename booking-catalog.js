@@ -286,6 +286,26 @@
         'T': { minOrder: 299, restrictHours: true },
         'V': { minOrder: 299, restrictHours: true }
     };
+    // PLZ plausibility. A mistyped PLZ silently moves the booking into the wrong
+    // geo-cluster in n8n and blocks that whole day in the calendar (real case:
+    // "3701 Deutschkreuz" instead of 7301 resolved to cluster LINZ, so 24.09.
+    // went red for every further booking). Warning only, never a hard block —
+    // border PLZ are genuinely ambiguous: Jennersdorf is Burgenland but carries
+    // 8380, Kittsee 2421, Braunau 5280 = OÖ, St. Valentin 4300 = NÖ. The table is
+    // verified against every city in LOCATIONS by test-plz-validation.js — extend
+    // it there first when a real address is rejected.
+    const ZONE_PLZ_PREFIXES = {
+        'B': ['7', '24', '83'],  // + Kittsee/Bruckneudorf (24xx), Bezirk Jennersdorf (838x)
+        'W': ['1'],
+        'NÖ': ['2', '3', '43'],  // + St. Valentin und Umgebung (43xx)
+        'ST': ['8'],
+        'OÖ': ['4', '52', '53'], // + Innviertel/Salzkammergut (Braunau 5280)
+        'SB': ['5'],
+        'K': ['9'],
+        'T': ['6', '99'],        // + Osttirol (Lienz 99xx)
+        'V': ['6']
+    };
+
     const TRAVEL_FEE = 20;
     const BUSINESS_DISCOUNT_PERCENT = 10;
 
@@ -355,6 +375,13 @@
         'Oberösterreich', 'Salzburg', 'Kärnten', 'Tirol', 'Vorarlberg'];
 
     const getZoneRule = zone => ZONE_RULES[zone] || { minOrder: 0, restrictHours: false };
+    const isValidPlz = plz => /^\d{4}$/.test(String(plz || '').trim());
+    // true when the PLZ is plausible for that zone, or when we cannot tell.
+    const plzMatchesZone = (plz, zone) => {
+        const prefixes = ZONE_PLZ_PREFIXES[zone];
+        if (!prefixes) return true;
+        return prefixes.some(prefix => String(plz || '').trim().startsWith(prefix));
+    };
     const getProduct = name => PRODUCTS.find(product => product.name === name);
     const getAddon = id => ADDONS.find(addon => addon.id === id);
     const addonsFor = name => ADDONS.filter(addon => Object.hasOwn(addon.prices, name));
@@ -447,8 +474,8 @@
 
     return {
         CATEGORIES, PRODUCTS, ADDONS, ADDON_GROUPS, CONDITIONS, ZONE_RULES, RESTRICTED_START_TIMES,
-        LOCATIONS, REGION_ORDER, TRAVEL_FEE, BUSINESS_DISCOUNT_PERCENT,
-        getZoneRule, getProduct, getAddon, addonsFor, hasAddons,
+        LOCATIONS, REGION_ORDER, TRAVEL_FEE, BUSINESS_DISCOUNT_PERCENT, ZONE_PLZ_PREFIXES,
+        getZoneRule, isValidPlz, plzMatchesZone, getProduct, getAddon, addonsFor, hasAddons,
         getSelectedServices, calculateBooking
     };
 }));

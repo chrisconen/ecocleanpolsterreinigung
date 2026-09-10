@@ -719,6 +719,10 @@
                                                 placeholder="Zum Beispiel: Stockwerk ohne Lift, Parkmöglichkeit, besondere Flecken …"></textarea>
                                         </label>
                                         <div class="cfg-alert is-warning" id="cfgFormError" role="alert" hidden></div>
+
+                                        <!-- Mobil: a kosár megnyitása, ha minden adat helyes -->
+                                        <button type="button" class="cfg-form-cta" id="cfgFormCta" disabled
+                                            aria-label="Weiter zum Warenkorb">Weiter</button>
                                     </section>
                                 </div>
 
@@ -1011,8 +1015,8 @@
         </div>
     </dialog>
     <script src="booking-calendar.js?v=copy-20260908" defer></script>
-    <script src="booking-catalog.js?v=konfigurator-2026-09" defer></script>
-    <script src="premium-booking.js?v=warenkorb-3" defer></script>
+    <script src="booking-catalog.js?v=plz-validation-20260910" defer></script>
+    <script src="premium-booking.js?v=plz-validation-20260910" defer></script>
     <script src="premium.js?v=copy-20260908" defer></script>
 </body>
 
