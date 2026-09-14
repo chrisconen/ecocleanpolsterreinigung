@@ -1541,9 +1541,10 @@ function showBookingSuccess(data, payload) {
             ['Termin', formatBookingDate(data.slot?.date || payload.booking.preferredDate)],
             ['Uhrzeit', `${start} – ${end} Uhr`],
             ['Adresse', payload.location],
-            ['Gesamtpreis', `${payload.totals.estimatedPrice} € inkl. Anfahrt`]
+            ['Gesamtpreis', `${payload.totals.estimatedPrice} € inkl. Anfahrt`],
+            ['Zahlung', 'Bar vor Ort gegen Rechnung']
         ],
-        note: 'Sie müssen nichts vorbereiten. Sorgen Sie nur dafür, dass die Möbelstücke frei zugänglich sind — den Rest bringen wir mit.',
+        note: 'Sie müssen nichts vorbereiten. Sorgen Sie nur dafür, dass die Möbelstücke frei zugänglich sind — den Rest bringen wir mit. Bitte halten Sie den Endbetrag in bar bereit.',
         actions: [
             { label: 'Termin als PDF speichern', primary: true, run: () => window.print() },
             { label: 'Frage zum Termin? 0664 9975 4216', href: 'tel:+4366499754216' }
