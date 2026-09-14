@@ -273,6 +273,12 @@ html, body.px-site, .config-body { overflow-x: clip; }
     transition: width .45s ease; }
 .cfg-minbar.is-reached .cfg-minbar-fill { background: #008567; }
 
+.cfg-pay { display: flex; gap: 10px; align-items: flex-start; margin-top: 14px; padding: 12px 14px;
+    border: 1px solid #d3e5d8; border-radius: 8px; background: #f4fbf5;
+    font-size: 12.5px; line-height: 1.6; color: #1d3a2d; }
+.cfg-pay > span:first-child { flex-shrink: 0; font-size: 16px; line-height: 1.4; }
+.cfg-pay p { margin: 0; }
+.cfg-pay strong { color: #053c32; }
 .cfg-rail-cta { display: block; width: 100%; min-height: 54px; margin-top: 16px; padding: 15px 20px;
     border: 0; border-radius: 8px; background: var(--cfg-green); color: #fff; font-size: 15px; font-weight: 600;
     transition: background .18s, transform .18s; }
@@ -317,6 +323,12 @@ html, body.px-site, .config-body { overflow-x: clip; }
     border: 1px solid var(--cfg-line); border-radius: 8px; background: #fff; font-size: 13px;
     color: var(--cfg-muted); text-decoration: none; }
 .cfg-result-link:hover { border-color: var(--cfg-green); color: var(--cfg-green); }
+
+/* ── Mobil „Weiter" gomb (űrlap alja) ────────────────────────────────────── */
+/* Desktop-on rejtve — a Preisleiste ott van. Mobilon az űrlap végén áll,
+   inaktív amíg valamelyik kötelező mező hiányzik; ha minden helyes, aktívvá
+   válik és megnyitja a kosár-szublát (ár + tételek + Termin jetzt buchen). */
+.cfg-form-cta { display: none; }
 
 /* ── Mobile Preisleiste ──────────────────────────────────────────────────── */
 .cfg-bar[hidden] { display: none !important; }
@@ -406,6 +418,11 @@ html, body.px-site, .config-body { overflow-x: clip; }
     .cfg-stepper > div { justify-content: space-between; }
     .cfg-row { grid-template-columns: 1fr; }
     .cfg-bar { display: flex; }
+    .cfg-form-cta { display: block; width: 100%; min-height: 52px; margin-top: 16px; padding: 14px 20px;
+        border: 0; border-radius: 8px; background: var(--cfg-green); color: #fff; font-size: 15px;
+        font-weight: 700; cursor: pointer; transition: opacity .18s, transform .18s; }
+    .cfg-form-cta:disabled { opacity: .45; cursor: default; }
+    .cfg-form-cta:not(:disabled):hover { transform: translateY(-2px); }
     .cfg-wrap { padding-bottom: 84px; }
     .cfg-rail-top { padding: 18px; }
     .cfg-rail-body { padding: 16px 18px 20px; }
@@ -421,7 +438,7 @@ html, body.px-site, .config-body { overflow-x: clip; }
     .cfg-layout:has(.cfg-rail-result) { grid-template-columns: 1fr; }
     .cfg-result-actions,
     .px-header, .cfg-bar, .cfg-progress, .cfg-rail-cta, .cfg-rail-actions,
-    .cfg-suggest, .cfg-step-btn, .px-footer,
+    .cfg-suggest, .cfg-step-btn, .px-footer, .cfg-form-cta,
     .cfg-cart-tab, .cfg-cart-backdrop, .cfg-cart-close { display: none !important; }
     .cfg-layout { grid-template-columns: 1fr; }
     /* Auf Papier gibt es keine Schublade — der Beleg steht im Fluss. */
